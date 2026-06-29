@@ -21,7 +21,10 @@ do
 done
 
 python manage.py migrate --noinput
-python manage.py seed_site --username "${ADMIN_USERNAME:-admin}" --password "${ADMIN_PASSWORD:-admin123}"
+python manage.py seed_site \
+  --username "${ADMIN_USERNAME:-admin}" \
+  --password "${ADMIN_PASSWORD:-admin123}" \
+  --email "${ADMIN_EMAIL:-admin@twareshdenis.com}"
 python manage.py collectstatic --noinput
 
-exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
+exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers "${GUNICORN_WORKERS:-3}"

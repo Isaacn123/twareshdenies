@@ -300,26 +300,12 @@ async function renderSections() {
 
 function openSectionContentEditor(section) {
   const editor = document.getElementById('sectionEditor');
-  editor.classList.remove('hidden');
-  editor.innerHTML = `
-    <h3 style="margin-top:0">Edit content — ${escapeHtml(section.title)}</h3>
-    <p style="color:var(--muted)">Structured JSON stored in database. Images remain in <code>frontend/assets/</code>.</p>
-    <div class="field"><label>Section content (JSON)</label><textarea id="sectionContentJson" style="min-height:320px;font-family:ui-monospace,monospace">${escapeHtml(JSON.stringify(section.content || {}, null, 2))}</textarea></div>
-    <button class="btn btn-primary" id="saveSectionContentBtn" type="button">Save content</button>
-    <button class="btn btn-ghost" id="cancelSectionContentBtn" type="button">Cancel</button>
-    <div class="status" id="sectionContentStatus"></div>`;
-  document.getElementById('cancelSectionContentBtn').onclick = () => editor.classList.add('hidden');
-  document.getElementById('saveSectionContentBtn').onclick = async () => {
-    try {
-      const content = JSON.parse(document.getElementById('sectionContentJson').value);
+  SectionContentEditor.open(section, editor, {
+    onSave: async (content) => {
       await API.updateSection(section.slug, { content });
-      document.getElementById('sectionContentStatus').textContent = 'Content saved. Refresh the public site to see changes.';
       renderSections();
-    } catch {
-      document.getElementById('sectionContentStatus').textContent = 'Invalid JSON.';
-      document.getElementById('sectionContentStatus').className = 'status error';
-    }
-  };
+    },
+  });
 }
 
 async function renderInvestors() {
@@ -360,9 +346,10 @@ async function renderInvestors() {
   });
 }
 
-function openInvestorEditor(investor, allInvestors) {
+async function openInvestorEditor(investor, allInvestors) {
   const editor = document.getElementById('investorEditor');
   editor.classList.remove('hidden');
+  CKE.destroyIn(editor);
   const p = investor?.portfolio || {};
   editor.innerHTML = `
     <h3 style="margin-top:0">${investor ? 'Manage investor' : 'New investor'}</h3>
@@ -380,13 +367,16 @@ function openInvestorEditor(investor, allInvestors) {
       </div>
     </div>
     <div class="field"><label>Portfolio JSON (aum, ytd_return, allocation, etc.)</label><textarea id="inv-portfolio" style="min-height:160px;font-family:ui-monospace,monospace">${escapeHtml(JSON.stringify(p, null, 2))}</textarea></div>
-    <div class="field"><label>Admin notes</label><textarea id="inv-notes">${escapeHtml(investor?.admin_notes || '')}</textarea></div>
+    <div class="field-richtext"><label>Admin notes</label><textarea id="inv-notes" data-ckeditor>${richTextareaValue(investor?.admin_notes || '')}</textarea></div>
     <div class="field"><label>Document title</label><input id="doc-title" placeholder="Q1 Performance Report"></div>
+    <div class="field-richtext"><label>Document description</label><textarea id="doc-description" data-ckeditor placeholder="Optional summary shown in the investor portal"></textarea></div>
     <div class="field"><label>Document URL</label><input id="doc-url" placeholder="https://..."></div>
     <button class="btn btn-primary" id="saveInvestorBtn" type="button">Save investor</button>
     ${investor ? `<button class="btn btn-ghost" id="togglePortalBtn" type="button">${investor.portal_enabled ? 'Disable portal' : 'Enable portal'}</button>` : ''}
     ${investor ? `<button class="btn btn-ghost" id="viewActivityBtn" type="button">View activity log</button>` : ''}
     <div id="investorActivity" style="margin-top:16px"></div>`;
+
+  await CKE.initIn(editor);
 
   document.getElementById('saveInvestorBtn').onclick = async () => {
     let portfolio = {};
@@ -397,7 +387,7 @@ function openInvestorEditor(investor, allInvestors) {
       phone: document.getElementById('inv-phone').value.trim(),
       investor_type: document.getElementById('inv-type').value,
       portfolio,
-      admin_notes: document.getElementById('inv-notes').value.trim(),
+      admin_notes: CKE.getValue(document.getElementById('inv-notes')),
     };
     const password = document.getElementById('inv-password').value;
     if (password) payload.password = password;
@@ -405,7 +395,16 @@ function openInvestorEditor(investor, allInvestors) {
       await API.updateInvestor(investor.id, payload);
       const docTitle = document.getElementById('doc-title').value.trim();
       const docUrl = document.getElementById('doc-url').value.trim();
-      if (docTitle) await API.addInvestorDocument(investor.id, { title: docTitle, file_url: docUrl, doc_type: 'report', is_visible: true });
+      const docDescription = CKE.getValue(document.getElementById('doc-description'));
+      if (docTitle) {
+        await API.addInvestorDocument(investor.id, {
+          title: docTitle,
+          description: docDescription,
+          file_url: docUrl,
+          doc_type: 'report',
+          is_visible: true,
+        });
+      }
     } else {
       payload.username_input = document.getElementById('inv-username').value.trim();
       payload.username = payload.username_input;
@@ -519,9 +518,10 @@ function openUserEditor(user, roles) {
   };
 }
 
-function openSectionEditor(section) {
+async function openSectionEditor(section) {
   const editor = document.getElementById('sectionEditor');
   editor.classList.remove('hidden');
+  CKE.destroyIn(editor);
   editor.innerHTML = `
     <h3 style="margin-top:0">${section ? 'Edit section' : 'New section'}</h3>
     <div class="grid-2">
@@ -536,9 +536,11 @@ function openSectionEditor(section) {
       <div class="field"><label>Sort order</label><input id="secOrder" type="number" value="${section?.sort_order ?? 0}"></div>
     </div>
     <div class="field"><label>JSON content</label><textarea id="secContent">${escapeHtml(JSON.stringify(section?.content || {}, null, 2))}</textarea></div>
-    <div class="field"><label>HTML content (for html/custom sections)</label><textarea id="secHtml">${escapeHtml(section?.html_content || '')}</textarea></div>
+    <div class="field-richtext"><label>HTML content (for html/custom sections)</label><textarea id="secHtml" data-ckeditor>${richTextareaValue(section?.html_content || '')}</textarea></div>
     <div class="field"><label><input id="secPublished" type="checkbox" ${section?.is_published !== false ? 'checked' : ''}> Published</label></div>
     <button class="btn btn-primary" id="saveSectionBtn" type="button">Save section</button>`;
+
+  await CKE.init(document.getElementById('secHtml'));
 
   document.getElementById('saveSectionBtn').onclick = async () => {
     let content = {};
@@ -554,7 +556,7 @@ function openSectionEditor(section) {
       section_type: document.getElementById('secType').value,
       sort_order: Number(document.getElementById('secOrder').value || 0),
       content,
-      html_content: document.getElementById('secHtml').value,
+      html_content: CKE.getValue(document.getElementById('secHtml')),
       is_published: document.getElementById('secPublished').checked,
     };
     if (section) await API.updateSection(section.slug, payload);
@@ -582,9 +584,9 @@ async function renderSettings() {
         <div class="field"><label>Hero headline</label><input id="heroHeadline" value="${escapeAttr(s.hero?.headline || '')}"></div>
         <div class="field"><label>Highlighted word</label><input id="heroHighlight" value="${escapeAttr(s.hero?.highlight || '')}"></div>
         <div class="field"><label>Headline suffix</label><input id="heroSuffix" value="${escapeAttr(s.hero?.headlineSuffix || '')}"></div>
-        <div class="field"><label>Subheadline</label><textarea id="heroSub">${escapeHtml(s.hero?.subheadline || '')}</textarea></div>
+        <div class="field-richtext"><label>Subheadline</label><textarea id="heroSub" data-ckeditor>${richTextareaValue(s.hero?.subheadline || '')}</textarea></div>
         <div class="field"><label>SEO title</label><input id="seoTitle" value="${escapeAttr(s.seo?.title || '')}"></div>
-        <div class="field"><label>SEO description</label><textarea id="seoDescription">${escapeHtml(s.seo?.description || '')}</textarea></div>
+        <div class="field-richtext"><label>SEO description</label><textarea id="seoDescription" data-ckeditor>${richTextareaValue(s.seo?.description || '')}</textarea></div>
       </div>
     </div>
     <div class="card" style="margin-top:18px">
@@ -594,6 +596,8 @@ async function renderSettings() {
     </div>
     <button class="btn btn-primary" id="saveSettingsBtn" type="button" style="margin-top:18px">Save settings</button>
     <div class="status" id="settingsStatus"></div>`;
+
+  await CKE.initIn(pageContent);
 
   document.getElementById('saveSettingsBtn').onclick = async () => {
     let navigation = s.navigation || {};
@@ -621,12 +625,12 @@ async function renderSettings() {
         headline: document.getElementById('heroHeadline').value.trim(),
         highlight: document.getElementById('heroHighlight').value.trim(),
         headlineSuffix: document.getElementById('heroSuffix').value.trim(),
-        subheadline: document.getElementById('heroSub').value.trim(),
+        subheadline: CKE.getValue(document.getElementById('heroSub')),
       },
       seo: {
         ...s.seo,
         title: document.getElementById('seoTitle').value.trim(),
-        description: document.getElementById('seoDescription').value.trim(),
+        description: CKE.stripHtml(CKE.getValue(document.getElementById('seoDescription'))),
       },
       navigation,
     };
@@ -688,6 +692,10 @@ function escapeHtml(value) {
 
 function escapeAttr(value) {
   return escapeHtml(value).replace(/`/g, '&#96;');
+}
+
+function richTextareaValue(value) {
+  return CKE.textareaValue(value);
 }
 
 init();

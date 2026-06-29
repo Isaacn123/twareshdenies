@@ -1,19 +1,18 @@
+# Requires .env in this directory (copy from .env.example).
+
 services:
   db:
     image: mysql:8.4
     container_name: twaresh_mysql
     restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: twareshdenis
-      MYSQL_USER: twaresh
-      MYSQL_PASSWORD: twareshpass
-      MYSQL_ROOT_PASSWORD: rootpass
+    env_file:
+      - .env
     volumes:
       - mysql_data:/var/lib/mysql
     ports:
-      - "3306:3306"
+      - "${MYSQL_PUBLISH_PORT}:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$$MYSQL_ROOT_PASSWORD\" || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -25,13 +24,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      PMA_HOST: db
-      PMA_USER: root
-      PMA_PASSWORD: rootpass
-      UPLOAD_LIMIT: 64M
+    env_file:
+      - .env
     ports:
-      - "8081:80"
+      - "${PHPMYADMIN_PORT}:80"
 
   backend:
     build: ./backend
@@ -40,22 +36,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      DJANGO_SECRET_KEY: change-me-in-production
-      DJANGO_DEBUG: "1"
-      DJANGO_ALLOWED_HOSTS: "*"
-      MYSQL_HOST: db
-      MYSQL_PORT: "3306"
-      MYSQL_DATABASE: twareshdenis
-      MYSQL_USER: twaresh
-      MYSQL_PASSWORD: twareshpass
-      ADMIN_USERNAME: admin
-      ADMIN_PASSWORD: admin123
-      CORS_ORIGINS: http://localhost:8080,http://localhost:8000
+    env_file:
+      - .env
     volumes:
       - media_data:/app/media
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT}:8000"
 
   frontend:
     build: ./frontend
@@ -64,7 +50,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "8080:80"
+      - "${FRONTEND_PORT}:80"
 
 volumes:
   mysql_data:

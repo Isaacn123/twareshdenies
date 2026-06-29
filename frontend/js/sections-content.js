@@ -29,15 +29,15 @@ const BINDERS = {
       const title = document.getElementById('heroTitle');
       if (title) title.innerHTML = `${c.headline} <span class="gold-line">${c.highlight || ''}</span> ${c.headline_suffix || ''}`;
     }
-    setText('hero', '#heroSub', c.subheadline);
+    setHtml('hero', '#heroSub', c.subheadline);
     setText('hero', '.dash-title', c.dash_title);
-    setText('hero', '.dash-note', c.dash_note);
+    setHtml('hero', '.dash-note', c.dash_note);
   },
   ticker(c) {
     setText('ticker', '.ticker-label', c.label ? `● ${c.label}`.replace(/^● /, '') : null);
     const label = document.querySelector('[data-section="ticker"] .ticker-label');
     if (label && c.label) label.innerHTML = `<span class="live-dot"></span> ${c.label}`;
-    setText('ticker', '.ticker-note', c.note);
+    setHtml('ticker', '.ticker-note', c.note);
   },
   strip(c) {
     if (!c.items?.length) return;
@@ -89,7 +89,7 @@ const BINDERS = {
   services(c) {
     setText('services', '.eyebrow', c.eyebrow);
     setHtml('services', '.section-title', c.title_html);
-    setText('services', '.section-lead', c.lead);
+    setHtml('services', '.section-lead', c.lead);
     const grid = q('services', '.svc-grid');
     if (grid && c.items) {
       grid.innerHTML = c.items.map((s, i) =>
@@ -110,7 +110,7 @@ const BINDERS = {
   risk(c) {
     setText('risk', '.eyebrow', c.eyebrow);
     setHtml('risk', '.section-title', c.title_html);
-    setText('risk', '.section-lead', c.lead);
+    setHtml('risk', '.section-lead', c.lead);
     const tbody = q('risk', '.risk-table tbody');
     if (tbody && c.table_rows) {
       tbody.innerHTML = c.table_rows.map(r => `<tr><td>${r.pillar}</td><td>${r.approach}</td><td>${r.objective}</td></tr>`).join('');
@@ -123,7 +123,7 @@ const BINDERS = {
   markets(c) {
     setText('markets', '.eyebrow', c.eyebrow);
     setHtml('markets', '.section-title', c.title_html);
-    setText('markets', '.section-lead', c.lead);
+    setHtml('markets', '.section-lead', c.lead);
     const tags = q('markets', '.market-tags');
     if (tags && c.tags) tags.innerHTML = c.tags.map(t => `<span class="market-tag"><i></i>${t}</span>`).join('');
     setText('markets', '.geo-card h3', c.geo_title);
@@ -142,7 +142,7 @@ const BINDERS = {
   clients(c) {
     setText('clients', '.eyebrow', c.eyebrow);
     setHtml('clients', '.section-title', c.title_html);
-    setText('clients', '.section-lead', c.lead);
+    setHtml('clients', '.section-lead', c.lead);
     const grid = q('clients', '.client-grid');
     if (grid && c.cards) {
       grid.innerHTML = c.cards.map((title, i) =>
@@ -153,7 +153,7 @@ const BINDERS = {
   institutional(c) {
     setText('institutional', '.eyebrow', c.eyebrow);
     setHtml('institutional', '.section-title', c.title_html);
-    setText('institutional', '.section-lead', c.lead);
+    setHtml('institutional', '.section-lead', c.lead);
     const list = q('institutional', '.inst-list');
     if (list && c.list) {
       list.innerHTML = c.list.map(item =>
@@ -170,13 +170,13 @@ const BINDERS = {
   calculator(c) {
     setText('calculator', '.eyebrow', c.eyebrow);
     setHtml('calculator', '.section-title', c.title_html);
-    setText('calculator', '.section-lead', c.lead);
+    setHtml('calculator', '.section-lead', c.lead);
     setHtml('calculator', '.calc-disclaimer', c.disclaimer);
   },
   insights(c) {
     setText('insights', '.eyebrow', c.eyebrow);
     setHtml('insights', '.section-title', c.title_html);
-    setText('insights', '.section-lead', c.lead);
+    setHtml('insights', '.section-lead', c.lead);
   },
   process(c) {
     setText('process', '.eyebrow', c.eyebrow);
@@ -191,16 +191,16 @@ const BINDERS = {
   contact(c) {
     setText('contact', '.eyebrow', c.eyebrow);
     setHtml('contact', '.section-title', c.title_html);
-    setText('contact', '.contact-lead', c.lead);
+    setHtml('contact', '.contact-lead', c.lead);
     setText('contact', '.contact-form h3', c.form_title);
-    setText('contact', '.form-sub', c.form_sub);
-    setText('contact', '.form-note', c.form_note);
+    setHtml('contact', '.form-sub', c.form_sub);
+    setHtml('contact', '.form-note', c.form_note);
   },
   'investor-portal'(c) {
     setText('investor-portal', '.eyebrow', c.eyebrow);
     setHtml('investor-portal', '.section-title', c.title_html);
-    setText('investor-portal', '.section-lead', c.lead);
-    setText('investor-portal', '.investor-portal-note', c.note);
+    setHtml('investor-portal', '.section-lead', c.lead);
+    setHtml('investor-portal', '.investor-portal-note', c.note);
     const reg = document.getElementById('investorRegisterBtn');
     const login = document.getElementById('investorLoginBtn');
     if (reg) {

@@ -1,0 +1,38 @@
+.ck-editor__editable {
+  min-height: 140px;
+  max-height: 420px;
+  color: #111827;
+  background: #fff !important;
+}
+.ck.ck-editor {
+  width: 100%;
+}
+.ck.ck-toolbar {
+  border-radius: 10px 10px 0 0 !important;
+  border-color: var(--line, #e5e7eb) !important;
+}
+.ck.ck-editor__main > .ck-editor__editable {
+  border-radius: 0 0 10px 10px !important;
+  border-color: var(--line, #e5e7eb) !important;
+}
+.field-richtext {
+  margin-bottom: 16px;
+}
+.field-richtext label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.section-content-form fieldset {
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 0 0 16px;
+}
+.section-content-form legend {
+  font-weight: 600;
+  padding: 0 6px;
+  font-size: 13px;
+}

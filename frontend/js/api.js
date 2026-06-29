@@ -215,7 +215,7 @@ function applySiteContent(site) {
       title.innerHTML = `${site.hero.headline} <span class="gold-line">${site.hero.highlight}</span> ${site.hero.headlineSuffix || ''}`;
     }
     const sub = document.getElementById('heroSub');
-    if (sub) sub.textContent = site.hero.subheadline;
+    if (sub) sub.innerHTML = site.hero.subheadline || '';
   }
 
   if (site.portrait) {
