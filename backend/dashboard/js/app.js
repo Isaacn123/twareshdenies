@@ -51,11 +51,14 @@ async function init() {
       pageContent.innerHTML = '<div class="card status error"><h2 style="margin-top:0">Access denied</h2><p>This account does not have admin dashboard access. Use an admin account or sign in at the investor portal.</p><p><a href="login">Back to sign in</a></p></div>';
       return;
     }
-    document.getElementById('profileName')?.textContent = currentUser.full_name;
-    document.getElementById('profileEmail')?.textContent = currentUser.email || currentUser.username;
+    const profileName = document.getElementById('profileName');
+    const profileEmail = document.getElementById('profileEmail');
+    const profileRole = document.getElementById('profileRole');
     const avatar = document.getElementById('profileAvatar');
+    if (profileName) profileName.textContent = currentUser.full_name;
+    if (profileEmail) profileEmail.textContent = currentUser.email || currentUser.username;
     if (avatar) avatar.textContent = (currentUser.full_name || 'A').charAt(0).toUpperCase();
-    document.getElementById('profileRole')?.textContent = currentUser.permissions?.role || 'Site Manager';
+    if (profileRole) profileRole.textContent = currentUser.permissions?.role || 'Site Manager';
     setGreeting();
     if (!currentUser.permissions?.can_manage_users) {
       document.getElementById('navUsers')?.classList.add('hidden');
