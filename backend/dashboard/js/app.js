@@ -51,10 +51,11 @@ async function init() {
       pageContent.innerHTML = '<div class="card status error"><h2 style="margin-top:0">Access denied</h2><p>This account does not have admin dashboard access. Use an admin account or sign in at the investor portal.</p><p><a href="login">Back to sign in</a></p></div>';
       return;
     }
-    document.getElementById('profileName').textContent = currentUser.full_name;
-    document.getElementById('profileEmail').textContent = currentUser.email || currentUser.username;
-    document.getElementById('profileAvatar').textContent = (currentUser.full_name || 'A').charAt(0).toUpperCase();
-    document.getElementById('profileRole').textContent = currentUser.permissions?.role || 'Site Manager';
+    document.getElementById('profileName')?.textContent = currentUser.full_name;
+    document.getElementById('profileEmail')?.textContent = currentUser.email || currentUser.username;
+    const avatar = document.getElementById('profileAvatar');
+    if (avatar) avatar.textContent = (currentUser.full_name || 'A').charAt(0).toUpperCase();
+    document.getElementById('profileRole')?.textContent = currentUser.permissions?.role || 'Site Manager';
     setGreeting();
     if (!currentUser.permissions?.can_manage_users) {
       document.getElementById('navUsers')?.classList.add('hidden');
@@ -86,7 +87,8 @@ function setGreeting() {
   const hour = new Date().getHours();
   const period = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
   const name = (currentUser?.full_name || 'Admin').split(' ')[0];
-  document.getElementById('greetingText').textContent = `Good ${period}, ${name}`;
+  const greeting = document.getElementById('greetingText');
+  if (greeting) greeting.textContent = `Good ${period}, ${name}`;
 }
 
 async function loadTopbarData() {
@@ -100,26 +102,36 @@ async function loadTopbarData() {
 
   const noteBadge = document.getElementById('notificationBadge');
   const msgBadge = document.getElementById('messageBadge');
-  noteBadge.textContent = unreadNotes.length;
-  msgBadge.textContent = unreadMsgs.length;
-  noteBadge.classList.toggle('hidden', unreadNotes.length === 0);
-  msgBadge.classList.toggle('hidden', unreadMsgs.length === 0);
+  if (noteBadge) {
+    noteBadge.textContent = unreadNotes.length;
+    noteBadge.classList.toggle('hidden', unreadNotes.length === 0);
+  }
+  if (msgBadge) {
+    msgBadge.textContent = unreadMsgs.length;
+    msgBadge.classList.toggle('hidden', unreadMsgs.length === 0);
+  }
 
-  document.getElementById('notificationList').innerHTML = notifications.length
-    ? notifications.slice(0, 6).map(n => `
-        <div class="menu-item">
-          <strong>${escapeHtml(n.title)}</strong>
-          <small>${escapeHtml(n.message)}</small>
-        </div>`).join('')
-    : '<div class="menu-item"><small>No notifications yet.</small></div>';
+  const notificationList = document.getElementById('notificationList');
+  if (notificationList) {
+    notificationList.innerHTML = notifications.length
+      ? notifications.slice(0, 6).map(n => `
+          <div class="menu-item">
+            <strong>${escapeHtml(n.title)}</strong>
+            <small>${escapeHtml(n.message)}</small>
+          </div>`).join('')
+      : '<div class="menu-item"><small>No notifications yet.</small></div>';
+  }
 
-  document.getElementById('messageList').innerHTML = messages.length
-    ? messages.slice(0, 6).map(m => `
-        <div class="menu-item">
-          <strong>${escapeHtml(m.subject)}</strong>
-          <small>${escapeHtml(m.sender_name)} · ${new Date(m.created_at).toLocaleString()}</small>
-        </div>`).join('')
-    : '<div class="menu-item"><small>No messages yet.</small></div>';
+  const messageList = document.getElementById('messageList');
+  if (messageList) {
+    messageList.innerHTML = messages.length
+      ? messages.slice(0, 6).map(m => `
+          <div class="menu-item">
+            <strong>${escapeHtml(m.subject)}</strong>
+            <small>${escapeHtml(m.sender_name)} · ${new Date(m.created_at).toLocaleString()}</small>
+          </div>`).join('')
+      : '<div class="menu-item"><small>No messages yet.</small></div>';
+  }
 }
 
 async function navigate(page) {
