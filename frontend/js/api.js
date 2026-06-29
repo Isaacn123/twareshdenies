@@ -219,8 +219,9 @@ function applySiteContent(site) {
   }
 
   if (site.portrait) {
-    const img = document.getElementById('portraitImg');
-    if (img) img.src = site.portrait;
+    document.querySelectorAll('#portraitImg, #heroPortraitImg').forEach(img => {
+      img.src = site.portrait.startsWith('/') ? site.portrait : '/' + site.portrait.replace(/^\//, '');
+    });
   }
 
   applyStats(document.getElementById('heroStats'), site.stats?.hero);

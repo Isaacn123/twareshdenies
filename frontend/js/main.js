@@ -36,6 +36,14 @@ function initReveal() {
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 }
 
+function initHeroParallax() {
+  const el = document.querySelector('[data-parallax]');
+  if (!el) return;
+  window.addEventListener('scroll', () => {
+    el.style.transform = `translateY(${Math.min(window.scrollY * 0.08, 48)}px)`;
+  }, { passive: true });
+}
+
 function initUI() {
   const contact = window.SITE_CONFIG?.contact || {};
 
@@ -63,6 +71,7 @@ function initUI() {
 
   initReveal();
   initCounters();
+  initHeroParallax();
 
   const form = document.getElementById('contactForm');
   const statusBox = document.getElementById('formStatus');

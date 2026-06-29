@@ -76,54 +76,31 @@
         <div class="hero-stats reveal reveal-d4" id="heroStats"></div>
       </div>
 
-      <!-- dashboard visual -->
-      <div class="reveal reveal-d2">
-        <div class="dash" aria-hidden="true">
-          <div class="dash-float float-1"><div class="k">Risk Framework</div><div class="v">Active</div></div>
-          <div class="dash-float float-2"><div class="k">Drawdown Controls</div><div class="v">Enabled</div></div>
-          <div class="dash-head">
-            <span class="dash-title">Portfolio Intelligence — Illustrative</span>
-            <span class="dash-live"><span class="dot"></span> Live Markets</span>
+      <!-- portrait + intelligence card -->
+      <div class="hero-visual reveal reveal-d2">
+        <div class="portrait-hero" data-parallax>
+          <img id="heroPortraitImg" src="assets/twaresh-photo.jpg" alt="Twaresh Denis, Portfolio Manager and Digital Asset Investment Strategist">
+          <div class="ph-frame"></div>
+        </div>
+        <div class="hero-badge-float reveal reveal-d3" id="heroBadgeFloat"><span class="dot"></span> Risk Framework · Active</div>
+        <div class="hero-card reveal reveal-d3" aria-hidden="true">
+          <div class="hc-head">
+            <span class="hc-title">Portfolio Intelligence</span>
+            <span class="hc-live"><span class="dot"></span> Illustrative</span>
           </div>
-          <div class="dash-metrics">
-            <div class="dash-metric"><div class="k">Strategy</div><div class="v">Multi-Asset</div></div>
-            <div class="dash-metric"><div class="k">Risk Posture</div><div class="v up">Defensive</div></div>
-            <div class="dash-metric"><div class="k">Cycle Phase</div><div class="v">Accumulation</div></div>
-          </div>
-          <div class="dash-chart">
-            <svg viewBox="0 0 520 200" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#C9A14B" stop-opacity=".22"/>
-                  <stop offset="100%" stop-color="#C9A14B" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              <g class="chart-grid">
-                <line x1="0" y1="50" x2="520" y2="50"/><line x1="0" y1="100" x2="520" y2="100"/><line x1="0" y1="150" x2="520" y2="150"/>
-              </g>
-              <path class="chart-area" d="M0,160 C40,150 60,130 95,132 C130,134 150,100 190,104 C230,108 250,120 290,98 C330,76 350,88 390,64 C430,40 460,52 520,30 L520,200 L0,200 Z"/>
-              <path class="chart-line" d="M0,160 C40,150 60,130 95,132 C130,134 150,100 190,104 C230,108 250,120 290,98 C330,76 350,88 390,64 C430,40 460,52 520,30"/>
+          <div class="hc-chart">
+            <svg viewBox="0 0 320 96" preserveAspectRatio="none">
+              <defs><linearGradient id="heroFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#C9A14B" stop-opacity=".30"/><stop offset="100%" stop-color="#C9A14B" stop-opacity="0"/>
+              </linearGradient></defs>
+              <path class="hc-area" d="M0,78 C30,72 46,58 70,60 C96,62 110,40 132,42 C160,45 176,52 204,38 C236,22 250,30 280,18 C300,11 312,9 320,6 L320,96 L0,96 Z" fill="url(#heroFill)"></path>
+              <path class="hc-line" d="M0,78 C30,72 46,58 70,60 C96,62 110,40 132,42 C160,45 176,52 204,38 C236,22 250,30 280,18 C300,11 312,9 320,6"></path>
             </svg>
           </div>
-          <div class="dash-alloc">
-            <div class="alloc-ring">
-              <svg width="92" height="92" viewBox="0 0 92 92">
-                <circle cx="46" cy="46" r="38" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="9"/>
-                <circle class="ring-seg" cx="46" cy="46" r="38" fill="none" stroke="#C9A14B" stroke-width="9" stroke-dasharray="95 240" stroke-dashoffset="0" transform="rotate(-90 46 46)"/>
-                <circle class="ring-seg" cx="46" cy="46" r="38" fill="none" stroke="#E2C275" stroke-width="9" stroke-dasharray="60 240" stroke-dashoffset="-95" transform="rotate(-90 46 46)"/>
-                <circle class="ring-seg" cx="46" cy="46" r="38" fill="none" stroke="#6C7585" stroke-width="9" stroke-dasharray="45 240" stroke-dashoffset="-155" transform="rotate(-90 46 46)"/>
-                <circle class="ring-seg" cx="46" cy="46" r="38" fill="none" stroke="#2E3D5C" stroke-width="9" stroke-dasharray="38 240" stroke-dashoffset="-200" transform="rotate(-90 46 46)"/>
-                <text x="46" y="50" text-anchor="middle" font-family="Cormorant Garamond" font-size="15" fill="#F7F5F0">Alloc.</text>
-              </svg>
-            </div>
-            <div class="alloc-legend">
-              <span><i style="background:#C9A14B"></i> Bitcoin</span>
-              <span><i style="background:#E2C275"></i> Ethereum</span>
-              <span><i style="background:#6C7585"></i> Digital Assets</span>
-              <span><i style="background:#2E3D5C"></i> Cash &amp; Hedges</span>
-            </div>
+          <div class="hc-foot">
+            <div class="hc-stat"><div class="k">Risk Posture</div><div class="v" id="heroRiskPosture">Defensive</div></div>
+            <div class="hc-stat"><div class="k">Cycle Phase</div><div class="v gold" id="heroCyclePhase">Accumulation</div></div>
           </div>
-          <div class="dash-note">Illustrative framework only — not a representation of actual client portfolios or performance.</div>
         </div>
       </div>
     </div>

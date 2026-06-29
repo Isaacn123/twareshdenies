@@ -30,8 +30,17 @@ const BINDERS = {
       if (title) title.innerHTML = `${c.headline} <span class="gold-line">${c.highlight || ''}</span> ${c.headline_suffix || ''}`;
     }
     setHtml('hero', '#heroSub', c.subheadline);
-    setText('hero', '.dash-title', c.dash_title);
-    setHtml('hero', '.dash-note', c.dash_note);
+    const heroPortrait = document.getElementById('heroPortraitImg');
+    if (heroPortrait && c.portrait_alt) heroPortrait.alt = c.portrait_alt;
+    const badgeFloat = document.getElementById('heroBadgeFloat');
+    if (badgeFloat && c.badge_float) badgeFloat.innerHTML = `<span class="dot"></span> ${c.badge_float}`;
+    setText('hero', '.hc-title', c.card_title || c.dash_title);
+    const hcLive = q('hero', '.hc-live');
+    if (hcLive && (c.card_live || c.dash_note)) {
+      hcLive.innerHTML = `<span class="dot"></span> ${c.card_live || 'Illustrative'}`;
+    }
+    setText('hero', '#heroRiskPosture', c.risk_posture);
+    setText('hero', '#heroCyclePhase', c.cycle_phase);
   },
   ticker(c) {
     setText('ticker', '.ticker-label', c.label ? `● ${c.label}`.replace(/^● /, '') : null);
