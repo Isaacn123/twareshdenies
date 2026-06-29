@@ -43,6 +43,13 @@
           document.getElementById('password').value
         );
         saveTokens(data);
+        const profile = await API.me();
+        if (!hasAdminAccess(profile)) {
+          clearTokens();
+          status.className = 'status error';
+          status.textContent = 'This account does not have admin access. Use your admin credentials or sign in at the investor portal.';
+          return;
+        }
         window.location.href = 'app';
       } catch (err) {
         status.className = 'status error';

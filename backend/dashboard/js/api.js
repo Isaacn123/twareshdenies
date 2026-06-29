@@ -11,10 +11,45 @@ const API = {
     return headers;
   },
 
-  async request(path, options = {}) {
+  async refreshAccessToken() {
+    const refresh = localStorage.getItem('refresh_token');
+    if (!refresh) return false;
+    try {
+      const res = await fetch(this.base + '/api/auth/refresh/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh }),
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      if (data.access) {
+        localStorage.setItem('access_token', data.access);
+        return true;
+      }
+    } catch {
+      return false;
+    }
+    return false;
+  },
+
+  async request(path, options = {}, allowRetry = true) {
     const res = await fetch(this.base + path, options);
+    if (res.status === 401 && allowRetry && !path.includes('/auth/login/')) {
+      const refreshed = await this.refreshAccessToken();
+      if (refreshed) {
+        const headers = { ...(options.headers || {}) };
+        headers.Authorization = 'Bearer ' + this.token();
+        return this.request(path, { ...options, headers }, false);
+      }
+    }
+
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.detail || data.error || data.message || 'Request failed');
+    if (!res.ok) {
+      const err = new Error(data.detail || data.error || data.message || `Request failed (${res.status})`);
+      err.status = res.status;
+      err.data = data;
+      throw err;
+    }
     return data;
   },
 
@@ -23,7 +58,7 @@ const API = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
-    });
+    }, false);
   },
 
   me() {
@@ -182,4 +217,11 @@ function saveTokens(data) {
 function clearTokens() {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
+}
+
+function hasAdminAccess(user) {
+  if (!user) return false;
+  if (user.is_staff || user.is_superuser) return true;
+  const p = user.permissions || {};
+  return !!(p.can_manage_content || p.can_manage_users || p.can_manage_investors || p.can_view_submissions);
 }

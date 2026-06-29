@@ -43,9 +43,14 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 });
 
 async function init() {
+  pageContent.innerHTML = '<div class="card" style="padding:24px;color:var(--muted)">Loading dashboard…</div>';
   try {
     currentUser = await API.me();
-    siteSettings = await API.getSettings();
+    if (!hasAdminAccess(currentUser)) {
+      clearTokens();
+      pageContent.innerHTML = '<div class="card status error"><h2 style="margin-top:0">Access denied</h2><p>This account does not have admin dashboard access. Use an admin account or sign in at the investor portal.</p><p><a href="login">Back to sign in</a></p></div>';
+      return;
+    }
     document.getElementById('profileName').textContent = currentUser.full_name;
     document.getElementById('profileEmail').textContent = currentUser.email || currentUser.username;
     document.getElementById('profileAvatar').textContent = (currentUser.full_name || 'A').charAt(0).toUpperCase();
@@ -61,11 +66,19 @@ async function init() {
       navigate('investors');
       setTimeout(() => document.getElementById('addInvestorBtn')?.click(), 300);
     });
+    siteSettings = await API.getSettings().catch(err => {
+      console.warn('Site settings unavailable:', err.message);
+      return {};
+    });
     await loadTopbarData();
-    navigate('overview');
-  } catch {
-    clearTokens();
-    window.location.href = 'login';
+    await navigate('overview');
+  } catch (err) {
+    if (err.status === 401) {
+      clearTokens();
+      window.location.href = 'login';
+      return;
+    }
+    pageContent.innerHTML = `<div class="card status error"><h2 style="margin-top:0">Could not load dashboard</h2><p>${escapeHtml(err.message || 'Unknown error')}</p><p style="font-size:13px;color:var(--muted)">If this persists after deploy, run <code>python manage.py migrate</code> on the backend.</p><p><button class="btn btn-ghost" type="button" onclick="location.reload()">Retry</button></p></div>`;
   }
 }
 
@@ -109,13 +122,18 @@ async function loadTopbarData() {
     : '<div class="menu-item"><small>No messages yet.</small></div>';
 }
 
-function navigate(page) {
+async function navigate(page) {
   const config = pages[page];
   if (!config) return;
   document.querySelectorAll('.nav-link[data-page]').forEach(link => {
     link.classList.toggle('active', link.dataset.page === page);
   });
-  config.render();
+  pageContent.innerHTML = '<div class="card" style="padding:24px;color:var(--muted)">Loading…</div>';
+  try {
+    await Promise.resolve(config.render());
+  } catch (err) {
+    pageContent.innerHTML = `<div class="card status error"><h2 style="margin-top:0">Could not load this page</h2><p>${escapeHtml(err.message || 'Request failed')}</p></div>`;
+  }
 }
 
 async function renderOverview() {

@@ -28,7 +28,11 @@ class IsStaffUser(CanManageContent):
 
 def settings_payload(settings_obj):
     data = SiteSettingsSerializer(settings_obj).data
-    data['socials'] = build_default_socials(settings_obj.contact, settings_obj.socials)
+    try:
+        saved = settings_obj.socials
+    except Exception:
+        saved = []
+    data['socials'] = build_default_socials(settings_obj.contact, saved or [])
     return data
 
 
