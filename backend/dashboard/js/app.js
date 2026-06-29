@@ -39,7 +39,7 @@ document.addEventListener('click', () => {
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await API.logout();
   clearTokens();
-  window.location.href = 'index.html';
+  window.location.href = 'login';
 });
 
 async function init() {
@@ -65,7 +65,7 @@ async function init() {
     navigate('overview');
   } catch {
     clearTokens();
-    window.location.href = 'index.html';
+    window.location.href = 'login';
   }
 }
 

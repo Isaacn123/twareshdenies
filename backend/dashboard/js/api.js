@@ -171,7 +171,7 @@ const API = {
 };
 
 function requireAuth() {
-  if (!API.token()) window.location.href = 'index.html';
+  if (!API.token()) window.location.href = 'login';
 }
 
 function saveTokens(data) {

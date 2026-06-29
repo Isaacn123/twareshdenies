@@ -1,6 +1,12 @@
 from django.conf import settings
 from django.http import FileResponse, Http404
+from django.shortcuts import redirect
 from django.views.decorators.cache import never_cache
+
+DASHBOARD_ROUTES = {
+    'login': 'login.html',
+    'app': 'app.html',
+}
 
 
 def _serve_static_app(request, folder, path='index.html'):
@@ -28,7 +34,12 @@ def serve_portal_assets(request, path=''):
 
 
 @never_cache
-def serve_dashboard(request, path='index.html'):
+def serve_dashboard(request, path=''):
+    path = (path or '').strip('/')
+    if path in ('', 'index.html'):
+        return redirect('/dashboard/login', permanent=False)
+    if path in DASHBOARD_ROUTES:
+        path = DASHBOARD_ROUTES[path]
     return _serve_static_app(request, 'dashboard', path)
 
 

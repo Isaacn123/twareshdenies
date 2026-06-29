@@ -55,7 +55,7 @@ def contact_create(request):
             user=user,
             title='New contact enquiry',
             message=f'{submission.name} submitted an investment review request.',
-            link='/dashboard/app.html',
+            link='/dashboard/app',
         )
     return Response({
         'ok': True,

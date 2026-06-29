@@ -11,7 +11,7 @@ urlpatterns = [
     path('api/', include('apps.cms.urls')),
     path('api/', include('apps.investors.urls')),
     path('api/auth/', include('apps.accounts.urls')),
-    path('dashboard/', RedirectView.as_view(url='/dashboard/index.html', permanent=False)),
+    path('dashboard/', RedirectView.as_view(url='/dashboard/login', permanent=False)),
     re_path(r'^dashboard/(?P<path>.*)$', serve_dashboard, name='dashboard'),
     path('investor/', RedirectView.as_view(url='/investor/index.html', permanent=False)),
     re_path(r'^portal-assets/(?P<path>.*)$', serve_portal_assets, name='portal-assets'),

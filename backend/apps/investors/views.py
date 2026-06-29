@@ -57,7 +57,7 @@ def investor_register(request):
             user=user,
             title='New investor registration',
             message=f'{investor.full_name} ({investor.user.email}) registered and awaits portal approval.',
-            link='/dashboard/app.html',
+            link='/dashboard/app',
         )
 
     return Response({
