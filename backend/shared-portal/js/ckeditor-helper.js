@@ -13,32 +13,20 @@ window.CKE = (() => {
     return RICH_FIELD_KEYS.has(key);
   }
 
-  const toolbarClassic = [
+  // Plugins included in CKEditor 5 Classic build (CDN classic/ckeditor.js).
+  // Do not use super-build — it loads collaboration plugins that require a channelId.
+  const toolbar = [
     'heading', '|', 'bold', 'italic', 'link', '|',
     'bulletedList', 'numberedList', '|', 'blockQuote', '|', 'undo', 'redo',
   ];
 
-  const toolbarSuper = [
-    'heading', '|', 'bold', 'italic', 'underline', 'link', '|',
-    'bulletedList', 'numberedList', '|', 'blockQuote', '|', 'undo', 'redo',
-  ];
-
-  function getEditorClass() {
-    return window.CKEDITOR?.ClassicEditor || window.ClassicEditor || null;
-  }
-
-  function getToolbar() {
-    return window.CKEDITOR?.ClassicEditor ? toolbarSuper : toolbarClassic;
-  }
-
   async function init(el) {
     if (!el || instances.has(el)) return instances.get(el);
-    const Editor = getEditorClass();
-    if (!Editor) {
+    if (!window.ClassicEditor) {
       console.warn('CKEditor ClassicEditor not loaded');
       return null;
     }
-    const editor = await Editor.create(el, { toolbar: getToolbar() });
+    const editor = await ClassicEditor.create(el, { toolbar });
     instances.set(el, editor);
     return editor;
   }
