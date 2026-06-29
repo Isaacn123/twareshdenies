@@ -13,18 +13,32 @@ window.CKE = (() => {
     return RICH_FIELD_KEYS.has(key);
   }
 
-  const toolbar = [
+  const toolbarClassic = [
+    'heading', '|', 'bold', 'italic', 'link', '|',
+    'bulletedList', 'numberedList', '|', 'blockQuote', '|', 'undo', 'redo',
+  ];
+
+  const toolbarSuper = [
     'heading', '|', 'bold', 'italic', 'underline', 'link', '|',
     'bulletedList', 'numberedList', '|', 'blockQuote', '|', 'undo', 'redo',
   ];
 
+  function getEditorClass() {
+    return window.CKEDITOR?.ClassicEditor || window.ClassicEditor || null;
+  }
+
+  function getToolbar() {
+    return window.CKEDITOR?.ClassicEditor ? toolbarSuper : toolbarClassic;
+  }
+
   async function init(el) {
     if (!el || instances.has(el)) return instances.get(el);
-    if (!window.ClassicEditor) {
+    const Editor = getEditorClass();
+    if (!Editor) {
       console.warn('CKEditor ClassicEditor not loaded');
       return null;
     }
-    const editor = await ClassicEditor.create(el, { toolbar });
+    const editor = await Editor.create(el, { toolbar: getToolbar() });
     instances.set(el, editor);
     return editor;
   }
