@@ -8,6 +8,12 @@ DASHBOARD_ROUTES = {
     'app': 'app.html',
 }
 
+INVESTOR_ROUTES = {
+    'login': 'login.html',
+    'register': 'register.html',
+    'app': 'app.html',
+}
+
 
 def _serve_static_app(request, folder, path='index.html'):
     root = (settings.BASE_DIR / folder).resolve()
@@ -38,11 +44,22 @@ def serve_dashboard(request, path=''):
     path = (path or '').strip('/')
     if path in ('', 'index.html'):
         return redirect('/dashboard/login', permanent=False)
+    if path == 'app.html':
+        return redirect('/dashboard/app', permanent=False)
     if path in DASHBOARD_ROUTES:
         path = DASHBOARD_ROUTES[path]
     return _serve_static_app(request, 'dashboard', path)
 
 
 @never_cache
-def serve_investor(request, path='index.html'):
+def serve_investor(request, path=''):
+    path = (path or '').strip('/')
+    if path in ('', 'index.html'):
+        return redirect('/investor/login', permanent=False)
+    if path == 'register.html':
+        return redirect('/investor/register', permanent=False)
+    if path == 'app.html':
+        return redirect('/investor/app', permanent=False)
+    if path in INVESTOR_ROUTES:
+        path = INVESTOR_ROUTES[path]
     return _serve_static_app(request, 'investor', path)

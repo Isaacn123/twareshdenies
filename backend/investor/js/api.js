@@ -47,5 +47,5 @@ function clearTokens() {
   localStorage.removeItem('investor_refresh_token');
 }
 function requireAuth() {
-  if (!API.token()) window.location.href = 'index.html';
+  if (!API.token()) window.location.href = 'login';
 }

@@ -14,6 +14,7 @@ from .serializers import (
     SectionSerializer,
     SiteSettingsSerializer,
 )
+from .social_defaults import build_default_socials
 
 
 def get_site_settings():
@@ -25,6 +26,12 @@ class IsStaffUser(CanManageContent):
     pass
 
 
+def settings_payload(settings_obj):
+    data = SiteSettingsSerializer(settings_obj).data
+    data['socials'] = build_default_socials(settings_obj.contact, settings_obj.socials)
+    return data
+
+
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def public_site(request):
@@ -33,7 +40,7 @@ def public_site(request):
     visibility = {section.page_key: section.is_published for section in mapped_sections}
     published_sections = Section.objects.filter(is_published=True)
 
-    data = SiteSettingsSerializer(settings_obj).data
+    data = settings_payload(settings_obj)
     data['visibility'] = visibility
     data['section_content'] = {
         s.page_key: s.content for s in Section.objects.exclude(page_key='').exclude(page_key__isnull=True)
@@ -68,11 +75,11 @@ def contact_create(request):
 def admin_settings(request):
     settings_obj = get_site_settings()
     if request.method == 'GET':
-        return Response(SiteSettingsSerializer(settings_obj).data)
+        return Response(settings_payload(settings_obj))
     serializer = SiteSettingsSerializer(settings_obj, data=request.data, partial=(request.method == 'PATCH'))
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    return Response(serializer.data)
+    return Response(settings_payload(settings_obj))
 
 
 class SectionViewSet(viewsets.ModelViewSet):

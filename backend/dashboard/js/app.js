@@ -565,6 +565,49 @@ async function openSectionEditor(section) {
   };
 }
 
+const SOCIAL_PLATFORM_ORDER = ['linkedin', 'twitter', 'instagram', 'facebook', 'youtube', 'tiktok', 'telegram', 'github'];
+const SOCIAL_PLATFORM_LABELS = {
+  linkedin: 'LinkedIn',
+  twitter: 'X (Twitter)',
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  youtube: 'YouTube',
+  tiktok: 'TikTok',
+  telegram: 'Telegram',
+  github: 'GitHub',
+};
+
+function mergeSocials(saved) {
+  const map = Object.fromEntries((saved || []).map(item => [item.key, item]));
+  return SOCIAL_PLATFORM_ORDER.map(key => ({
+    key,
+    label: SOCIAL_PLATFORM_LABELS[key],
+    url: map[key]?.url || '',
+    enabled: !!map[key]?.enabled,
+    show_in_contact: map[key]?.show_in_contact ?? key === 'linkedin',
+  }));
+}
+
+function renderSocialRows(socials) {
+  return mergeSocials(socials).map(item => `
+    <tr data-social-key="${item.key}">
+      <td><label class="toggle" style="margin:0"><input type="checkbox" class="social-enabled" ${item.enabled ? 'checked' : ''}><span class="slider"></span></label></td>
+      <td><strong>${escapeHtml(item.label)}</strong></td>
+      <td><input class="social-url" type="url" placeholder="https://..." value="${escapeAttr(item.url)}" style="width:100%"></td>
+      <td><label><input type="checkbox" class="social-contact" ${item.show_in_contact ? 'checked' : ''}> Show in contact</label></td>
+    </tr>`).join('');
+}
+
+function collectSocialsFromForm() {
+  return [...document.querySelectorAll('#socialsTable tbody tr')].map(row => ({
+    key: row.dataset.socialKey,
+    label: SOCIAL_PLATFORM_LABELS[row.dataset.socialKey],
+    url: row.querySelector('.social-url').value.trim(),
+    enabled: row.querySelector('.social-enabled').checked,
+    show_in_contact: row.querySelector('.social-contact').checked,
+  }));
+}
+
 async function renderSettings() {
   const s = siteSettings || await API.getSettings();
   pageContent.innerHTML = `
@@ -576,7 +619,6 @@ async function renderSettings() {
         <div class="field"><label>Badge</label><input id="brandBadge" value="${escapeAttr(s.brand?.badge || '')}"></div>
         <div class="field"><label>Email</label><input id="contactEmail" value="${escapeAttr(s.contact?.email || '')}"></div>
         <div class="field"><label>Phone</label><input id="contactPhone" value="${escapeAttr(s.contact?.phone || '')}"></div>
-        <div class="field"><label>LinkedIn</label><input id="contactLinkedin" value="${escapeAttr(s.contact?.linkedin || '')}"></div>
         <div class="field"><label>Calendly</label><input id="contactCalendly" value="${escapeAttr(s.contact?.calendly || '')}"></div>
       </div>
       <div class="card">
@@ -587,6 +629,18 @@ async function renderSettings() {
         <div class="field-richtext"><label>Subheadline</label><textarea id="heroSub" data-ckeditor>${richTextareaValue(s.hero?.subheadline || '')}</textarea></div>
         <div class="field"><label>SEO title</label><input id="seoTitle" value="${escapeAttr(s.seo?.title || '')}"></div>
         <div class="field-richtext"><label>SEO description</label><textarea id="seoDescription" data-ckeditor>${richTextareaValue(s.seo?.description || '')}</textarea></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h3 style="color:var(--text);font-size:18px;margin-top:0">Social profiles</h3>
+      <p style="color:var(--muted);font-size:13px;margin:0 0 16px">Enable platforms and add profile URLs. Only enabled profiles with a URL appear on the public site footer. Optionally show them in the contact section too.</p>
+      <div class="table-wrap">
+        <table id="socialsTable">
+          <thead>
+            <tr><th>Show</th><th>Platform</th><th>Profile URL</th><th>Contact section</th></tr>
+          </thead>
+          <tbody>${renderSocialRows(s.socials)}</tbody>
+        </table>
       </div>
     </div>
     <div class="card" style="margin-top:18px">
@@ -618,9 +672,9 @@ async function renderSettings() {
         ...s.contact,
         email: document.getElementById('contactEmail').value.trim(),
         phone: document.getElementById('contactPhone').value.trim(),
-        linkedin: document.getElementById('contactLinkedin').value.trim(),
         calendly: document.getElementById('contactCalendly').value.trim(),
       },
+      socials: collectSocialsFromForm(),
       hero: {
         headline: document.getElementById('heroHeadline').value.trim(),
         highlight: document.getElementById('heroHighlight').value.trim(),

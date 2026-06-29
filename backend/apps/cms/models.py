@@ -11,6 +11,7 @@ class SiteSettings(models.Model):
     insights = models.JSONField(default=list, blank=True)
     portrait = models.CharField(max_length=255, default='/assets/twaresh-photo.jpg')
     navigation = models.JSONField(default=dict, blank=True)
+    socials = models.JSONField(default=list, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

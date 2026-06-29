@@ -5,7 +5,7 @@ from .models import ContactSubmission, Message, Notification, Section, SiteSetti
 class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteSettings
-        fields = ['site_name', 'seo', 'brand', 'contact', 'hero', 'stats', 'insights', 'portrait', 'navigation', 'updated_at']
+        fields = ['site_name', 'seo', 'brand', 'contact', 'hero', 'stats', 'insights', 'portrait', 'navigation', 'socials', 'updated_at']
 
 
 class SectionSerializer(serializers.ModelSerializer):

@@ -4,11 +4,19 @@ const FALLBACK = {
   contact: {
     email: 'contact@twareshdenis.com',
     phone: '+256700000000',
-    linkedin: 'https://www.linkedin.com/in/twaresh-denis',
-    twitter: 'https://x.com/twareshdenis',
     calendly: '',
     waMessage: 'Hello Twaresh, I would like to discuss a portfolio consultation.'
   },
+  socials: [
+    { key: 'linkedin', label: 'LinkedIn', url: 'https://www.linkedin.com/in/twaresh-denis', enabled: true, show_in_contact: true },
+    { key: 'twitter', label: 'X (Twitter)', url: 'https://x.com/twareshdenis', enabled: true, show_in_contact: false },
+    { key: 'instagram', label: 'Instagram', url: '', enabled: false, show_in_contact: false },
+    { key: 'facebook', label: 'Facebook', url: '', enabled: false, show_in_contact: false },
+    { key: 'youtube', label: 'YouTube', url: '', enabled: false, show_in_contact: false },
+    { key: 'tiktok', label: 'TikTok', url: '', enabled: false, show_in_contact: false },
+    { key: 'telegram', label: 'Telegram', url: '', enabled: false, show_in_contact: false },
+    { key: 'github', label: 'GitHub', url: '', enabled: false, show_in_contact: false },
+  ],
   navigation: {
     header: [
       { label: 'About', href: '#about' },
@@ -19,8 +27,8 @@ const FALLBACK = {
       { label: 'Insights', href: '#insights' },
       { label: 'Contact', href: '#contact' },
       { label: 'Client Portal', href: '#investor-portal' },
-      { label: 'Client Sign In', href: '/investor/' },
-      { label: 'Become an Investor', href: '/investor/register.html', style: 'ghost', li_class: 'nav-cta nav-cta-portal' },
+      { label: 'Client Sign In', href: '/investor/login' },
+      { label: 'Become an Investor', href: '/investor/register', style: 'ghost', li_class: 'nav-cta nav-cta-portal' },
       { label: 'Schedule a Consultation', href: '#contact', style: 'gold', calendly: true, li_class: 'nav-cta' },
     ],
     footer_columns: [
@@ -30,8 +38,8 @@ const FALLBACK = {
         { label: 'Calculator', href: '#calculator' }, { label: 'Insights', href: '#insights' },
       ]},
       { title: 'Client Portal', links: [
-        { label: 'Become an Investor', href: '/investor/register.html' },
-        { label: 'Sign In', href: '/investor/' },
+        { label: 'Become an Investor', href: '/investor/register' },
+        { label: 'Sign In', href: '/investor/login' },
       ]},
     ],
   },
@@ -97,6 +105,35 @@ function formatPhone(phone) {
   return phone.replace(/(\+\d{3})(\d{3})(\d{3})(\d{3})/, '$1 $2 $3 $4');
 }
 
+function socialDisplayUrl(url) {
+  return String(url || '').replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+}
+
+function applySocials(socials) {
+  const active = (socials || []).filter(s => s.enabled && s.url);
+  const footer = document.getElementById('footerSocial');
+  if (footer) {
+    footer.innerHTML = active.map(s => {
+      const icon = window.SOCIAL_ICONS?.[s.key];
+      if (!icon) return '';
+      return `<a href="${escNav(s.url)}" target="_blank" rel="noopener" aria-label="${escNav(s.label)}">${icon}</a>`;
+    }).join('');
+  }
+
+  const contactSocial = document.getElementById('contactSocialLinks');
+  if (contactSocial) {
+    contactSocial.innerHTML = active
+      .filter(s => s.show_in_contact)
+      .map(s => {
+        const icon = window.SOCIAL_CONTACT_ICONS?.[s.key] || window.SOCIAL_ICONS?.[s.key] || '';
+        return `<div class="channel">
+          <div class="channel-icon">${icon}</div>
+          <div><div class="k">${escNav(s.label)}</div><a class="v" href="${escNav(s.url)}" target="_blank" rel="noopener">${escNav(socialDisplayUrl(s.url))}</a></div>
+        </div>`;
+      }).join('');
+  }
+}
+
 function applyContact(config) {
   const c = config.contact || {};
   document.querySelectorAll('[data-contact="email"]').forEach(el => {
@@ -106,13 +143,6 @@ function applyContact(config) {
   document.querySelectorAll('[data-contact="phone"]').forEach(el => {
     el.href = 'tel:' + c.phone;
     if (el.classList.contains('v') || el.closest('.footer-col')) el.textContent = formatPhone(c.phone);
-  });
-  document.querySelectorAll('[data-contact="linkedin"]').forEach(el => {
-    el.href = c.linkedin;
-    if (el.classList.contains('v')) el.textContent = c.linkedin.replace(/^https?:\/\/(www\.)?/, '');
-  });
-  document.querySelectorAll('[data-contact="twitter"]').forEach(el => {
-    if (c.twitter) el.href = c.twitter;
   });
   document.querySelectorAll('[data-contact="whatsapp"]').forEach(el => {
     el.href = 'https://wa.me/' + c.phone.replace(/[^\d]/g, '') + '?text=' + encodeURIComponent(c.waMessage || '');
@@ -229,6 +259,7 @@ function applySiteContent(site) {
   applyInsights(site.insights);
   applyNavigation(site.navigation);
   applyContact(site);
+  applySocials(site.socials);
   applySectionVisibility(site.visibility);
   if (site.section_content) applySectionContentMap(site.section_content);
   renderDynamicSections(site.sections || []);

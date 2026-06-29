@@ -27,7 +27,7 @@ document.getElementById('profileDropdown').querySelector('button').onclick = e =
   document.getElementById('profileDropdown').classList.toggle('open');
 };
 document.addEventListener('click', () => document.getElementById('profileDropdown').classList.remove('open'));
-document.getElementById('logoutBtn').onclick = () => { clearTokens(); window.location.href = 'index.html'; };
+document.getElementById('logoutBtn').onclick = () => { clearTokens(); window.location.href = 'login'; };
 document.getElementById('promoBtn').onclick = () => navigate('settings');
 document.getElementById('createPortfolioBtn').onclick = () => navigate('portfolios');
 document.getElementById('notifBtn').onclick = () => navigate('alerts');
@@ -51,7 +51,7 @@ async function init() {
     navigate('dashboard');
   } catch {
     clearTokens();
-    window.location.href = 'index.html';
+    window.location.href = 'login';
   }
 }
 

@@ -13,7 +13,7 @@ urlpatterns = [
     path('api/auth/', include('apps.accounts.urls')),
     path('dashboard/', RedirectView.as_view(url='/dashboard/login', permanent=False)),
     re_path(r'^dashboard/(?P<path>.*)$', serve_dashboard, name='dashboard'),
-    path('investor/', RedirectView.as_view(url='/investor/index.html', permanent=False)),
+    path('investor/', RedirectView.as_view(url='/investor/login', permanent=False)),
     re_path(r'^portal-assets/(?P<path>.*)$', serve_portal_assets, name='portal-assets'),
     re_path(r'^investor/(?P<path>.*)$', serve_investor, name='investor-portal'),
 ]

@@ -192,7 +192,7 @@ SECTION_CONTENT = {
         'register_label': 'Create Investor Account',
         'login_label': 'Sign In to Portal',
         'note': 'New registrations are reviewed by our advisory team. Portal access is activated after approval.',
-        'register_url': '/investor/register.html',
-        'login_url': '/investor/',
+        'register_url': '/investor/register',
+        'login_url': '/investor/login',
     },
 }

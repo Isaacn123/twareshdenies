@@ -8,6 +8,7 @@ from apps.accounts.models import Role, UserProfile
 from apps.cms.models import Section, SiteSettings
 from apps.cms.navigation_defaults import DEFAULT_NAVIGATION
 from apps.cms.section_defaults import SECTION_CONTENT
+from apps.cms.social_defaults import build_default_socials
 
 PAGE_SECTIONS = [
     ('hero', 'hero', 'Hero', 'hero'),
@@ -61,6 +62,10 @@ class Command(BaseCommand):
         settings_obj.insights = payload.get('insights', [])
         settings_obj.portrait = payload.get('portrait', '/assets/twaresh-photo.jpg')
         settings_obj.navigation = payload.get('navigation', DEFAULT_NAVIGATION)
+        settings_obj.socials = build_default_socials(
+            settings_obj.contact,
+            payload.get('socials'),
+        )
         settings_obj.save()
 
         for index, (slug, page_key, title, section_type) in enumerate(PAGE_SECTIONS):

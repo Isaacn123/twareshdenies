@@ -8,8 +8,8 @@ DEFAULT_NAVIGATION = {
         {'label': 'Insights', 'href': '#insights'},
         {'label': 'Contact', 'href': '#contact'},
         {'label': 'Client Portal', 'href': '#investor-portal'},
-        {'label': 'Client Sign In', 'href': '/investor/'},
-        {'label': 'Become an Investor', 'href': '/investor/register.html', 'style': 'ghost', 'li_class': 'nav-cta nav-cta-portal'},
+        {'label': 'Client Sign In', 'href': '/investor/login'},
+        {'label': 'Become an Investor', 'href': '/investor/register', 'style': 'ghost', 'li_class': 'nav-cta nav-cta-portal'},
         {'label': 'Schedule a Consultation', 'href': '#contact', 'style': 'gold', 'calendly': True, 'li_class': 'nav-cta'},
     ],
     'footer_columns': [
@@ -37,8 +37,8 @@ DEFAULT_NAVIGATION = {
         {
             'title': 'Client Portal',
             'links': [
-                {'label': 'Become an Investor', 'href': '/investor/register.html'},
-                {'label': 'Sign In', 'href': '/investor/'},
+                {'label': 'Become an Investor', 'href': '/investor/register'},
+                {'label': 'Sign In', 'href': '/investor/login'},
             ],
         },
         {
