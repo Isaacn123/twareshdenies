@@ -43,9 +43,9 @@ services:
     ports:
       - "${BACKEND_PORT}:8000"
 
-  frontend:
+  public-site:
     build: ./frontend
-    container_name: twaresh_frontend
+    container_name: twaresh_public_site
     restart: unless-stopped
     depends_on:
       - backend
