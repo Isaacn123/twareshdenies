@@ -12,6 +12,8 @@ const pages = {
   settings: { render: renderSettings },
   submissions: { render: renderSubmissions },
   messages: { render: renderMessages },
+  documents: { render: renderDocuments },
+  alerts: { render: renderAlerts },
   reports: { render: renderReports },
   account: { render: renderAccount },
 };
@@ -471,36 +473,57 @@ async function renderUsers() {
       <div><span class="tag">${users.length} users · ${roles.length} roles</span></div>
       <button class="btn btn-primary" id="addUserBtn" type="button">Add user</button>
     </div>
-    <div class="grid-2">
-      <div class="card table-wrap">
+    <div class="stack-sections">
+      <div class="card">
         <h3 style="color:var(--text);margin-top:0">Users</h3>
-        <table>
-          <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
-          <tbody>
-            ${users.map(user => `
-              <tr>
-                <td>${escapeHtml(user.username)}</td>
-                <td>${escapeHtml(user.email || '-')}</td>
-                <td>${escapeHtml(user.role?.name || 'Unassigned')}</td>
-                <td>${user.is_active ? '<span class="tag">Active</span>' : '<span class="tag muted">Inactive</span>'}</td>
-                <td><button class="btn btn-ghost edit-user" data-id="${user.id}" type="button">Edit</button></td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
+        <div class="expand-list">
+          ${users.length ? users.map(user => `
+            <details class="expand-row">
+              <summary>
+                <span>${escapeHtml(user.username)}</span>
+                <span class="expand-meta">
+                  <span>${escapeHtml(user.role?.name || 'Unassigned')}</span>
+                  <span>${user.is_active ? 'Active' : 'Inactive'}</span>
+                </span>
+              </summary>
+              <div class="expand-body">
+                <div class="field-row">
+                  <div><small>Email</small><strong>${escapeHtml(user.email || '—')}</strong></div>
+                  <div><small>Role</small><strong>${escapeHtml(user.role?.name || 'Unassigned')}</strong></div>
+                  <div><small>Status</small><strong>${user.is_active ? 'Active' : 'Inactive'}</strong></div>
+                </div>
+                <button class="btn btn-ghost edit-user" data-id="${user.id}" type="button">Edit user</button>
+              </div>
+            </details>`).join('') : '<p style="color:var(--muted);margin:0">No users yet.</p>'}
+        </div>
       </div>
       <div class="card">
         <h3 style="color:var(--text);margin-top:0">Roles</h3>
-        ${roles.map(role => `
-          <div style="padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)">
-            <strong>${escapeHtml(role.name)}</strong>
-            <div style="color:var(--muted);font-size:13px;margin-top:4px">${escapeHtml(role.description)}</div>
-            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-              ${role.can_manage_users ? '<span class="tag">Manage users</span>' : ''}
-              ${role.can_manage_content ? '<span class="tag">Manage content</span>' : ''}
-              ${role.can_view_submissions ? '<span class="tag">View submissions</span>' : ''}
-              ${role.can_manage_investors ? '<span class="tag">Manage investors</span>' : ''}
-            </div>
-          </div>`).join('')}
+        <div class="expand-list">
+          ${roles.map(role => `
+            <details class="expand-row">
+              <summary>
+                <span>${escapeHtml(role.name)}</span>
+                <span class="expand-meta">
+                  ${[
+                    role.can_manage_users && 'Users',
+                    role.can_manage_content && 'Content',
+                    role.can_view_submissions && 'Submissions',
+                    role.can_manage_investors && 'Investors',
+                  ].filter(Boolean).slice(0, 3).join(' · ') || 'No permissions'}
+                </span>
+              </summary>
+              <div class="expand-body">
+                <p style="color:var(--muted);font-size:13px;margin:14px 0 12px">${escapeHtml(role.description || 'No description.')}</p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  ${role.can_manage_users ? '<span class="tag">Manage users</span>' : ''}
+                  ${role.can_manage_content ? '<span class="tag">Manage content</span>' : ''}
+                  ${role.can_view_submissions ? '<span class="tag">View submissions</span>' : ''}
+                  ${role.can_manage_investors ? '<span class="tag">Manage investors</span>' : ''}
+                </div>
+              </div>
+            </details>`).join('')}
+        </div>
       </div>
     </div>
     <div class="card hidden" id="userEditor" style="margin-top:18px"></div>`;
@@ -641,6 +664,224 @@ function collectSocialsFromForm() {
   }));
 }
 
+const NAV_LINK_STYLES = [
+  { value: '', label: 'Text link' },
+  { value: 'ghost', label: 'Ghost button' },
+  { value: 'gold', label: 'Gold button' },
+];
+
+const NAV_CONTACT_KEYS = [
+  { value: '', label: 'None' },
+  { value: 'email', label: 'Email (from contact settings)' },
+  { value: 'phone', label: 'Phone (from contact settings)' },
+  { value: 'whatsapp', label: 'WhatsApp (from contact settings)' },
+];
+
+function navActionButtons(scope) {
+  return `<div class="nav-row-actions">
+    <button type="button" class="btn btn-ghost btn-sm" data-nav-action="move-up" data-nav-scope="${scope}" title="Move up">↑</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-nav-action="move-down" data-nav-scope="${scope}" title="Move down">↓</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-nav-action="remove" data-nav-scope="${scope}" title="Remove">Remove</button>
+  </div>`;
+}
+
+function headerNavRowHtml(item = {}) {
+  const style = item.style || '';
+  return `<tr>
+    <td><input type="text" class="nav-header-label table-input" value="${escapeAttr(item.label || '')}" placeholder="About"></td>
+    <td><input type="text" class="nav-header-href table-input" value="${escapeAttr(item.href || '')}" placeholder="#about or /investor/login"></td>
+    <td><select class="nav-header-style table-input">${NAV_LINK_STYLES.map(opt =>
+      `<option value="${opt.value}"${style === opt.value ? ' selected' : ''}>${opt.label}</option>`
+    ).join('')}</select></td>
+    <td><input type="text" class="nav-header-li-class table-input" value="${escapeAttr(item.li_class || '')}" placeholder="nav-cta"></td>
+    <td class="nav-check"><label><input type="checkbox" class="nav-header-calendly"${item.calendly ? ' checked' : ''}> Calendly</label></td>
+    <td>${navActionButtons('header')}</td>
+  </tr>`;
+}
+
+function renderHeaderNavRows(items) {
+  const rows = items?.length ? items : [];
+  return rows.length
+    ? rows.map(item => headerNavRowHtml(item)).join('')
+    : '<tr class="nav-empty-row"><td colspan="6" style="color:var(--muted)">No header links yet. Add one below.</td></tr>';
+}
+
+function footerLinkRowHtml(link = {}) {
+  const contactKey = link.contact_key || '';
+  return `<tr>
+    <td><input type="text" class="footer-link-label table-input" value="${escapeAttr(link.label || '')}" placeholder="Link label"></td>
+    <td><input type="text" class="footer-link-href table-input" value="${escapeAttr(link.href || '')}" placeholder="#contact or mailto:..."></td>
+    <td><select class="footer-link-contact-key table-input">${NAV_CONTACT_KEYS.map(opt =>
+      `<option value="${opt.value}"${contactKey === opt.value ? ' selected' : ''}>${opt.label}</option>`
+    ).join('')}</select></td>
+    <td class="nav-check"><label><input type="checkbox" class="footer-link-calendly"${link.calendly ? ' checked' : ''}> Calendly</label></td>
+    <td>${navActionButtons('footer-link')}</td>
+  </tr>`;
+}
+
+function footerColumnHtml(col = {}) {
+  const links = col.links?.length ? col.links : [];
+  return `<div class="footer-nav-column">
+    <div class="footer-nav-column-head">
+      <div class="field" style="flex:1;margin:0">
+        <label>Column title</label>
+        <input type="text" class="footer-col-title" value="${escapeAttr(col.title || '')}" placeholder="Navigate">
+      </div>
+      ${navActionButtons('footer-column')}
+    </div>
+    <div class="table-wrap">
+      <table class="footer-links-table">
+        <thead>
+          <tr><th>Label</th><th>Link</th><th>Contact field</th><th>Calendly</th><th></th></tr>
+        </thead>
+        <tbody>${links.length
+          ? links.map(link => footerLinkRowHtml(link)).join('')
+          : '<tr class="nav-empty-row"><td colspan="5" style="color:var(--muted)">No links in this column.</td></tr>'}</tbody>
+      </table>
+    </div>
+    <button type="button" class="btn btn-ghost btn-sm" data-nav-action="add-footer-link">Add link</button>
+  </div>`;
+}
+
+function renderFooterNavColumns(columns) {
+  const cols = columns?.length ? columns : [];
+  return cols.length
+    ? cols.map(col => footerColumnHtml(col)).join('')
+    : '<p class="nav-empty-note">No footer columns yet. Add one below.</p>';
+}
+
+function collectHeaderNavFromForm() {
+  return [...document.querySelectorAll('#headerNavTable tbody tr')]
+    .filter(row => !row.classList.contains('nav-empty-row'))
+    .map(row => {
+      const item = {
+        label: row.querySelector('.nav-header-label').value.trim(),
+        href: row.querySelector('.nav-header-href').value.trim(),
+      };
+      const style = row.querySelector('.nav-header-style').value;
+      if (style) item.style = style;
+      const liClass = row.querySelector('.nav-header-li-class').value.trim();
+      if (liClass) item.li_class = liClass;
+      if (row.querySelector('.nav-header-calendly').checked) item.calendly = true;
+      return item;
+    })
+    .filter(item => item.label || item.href);
+}
+
+function collectFooterNavFromForm() {
+  return [...document.querySelectorAll('#footerNavEditor .footer-nav-column')].map(colEl => {
+    const links = [...colEl.querySelectorAll('.footer-links-table tbody tr')]
+      .filter(row => !row.classList.contains('nav-empty-row'))
+      .map(row => {
+        const item = {
+          label: row.querySelector('.footer-link-label').value.trim(),
+          href: row.querySelector('.footer-link-href').value.trim(),
+        };
+        const contactKey = row.querySelector('.footer-link-contact-key').value;
+        if (contactKey) item.contact_key = contactKey;
+        if (row.querySelector('.footer-link-calendly').checked) item.calendly = true;
+        return item;
+      })
+      .filter(item => item.label || item.href);
+    return {
+      title: colEl.querySelector('.footer-col-title').value.trim(),
+      links,
+    };
+  }).filter(col => col.title || col.links.length);
+}
+
+function collectNavigationFromForm() {
+  return {
+    header: collectHeaderNavFromForm(),
+    footer_columns: collectFooterNavFromForm(),
+  };
+}
+
+function clearNavEmptyRow(tbody) {
+  tbody.querySelector('.nav-empty-row')?.remove();
+}
+
+function moveNavRow(row, direction) {
+  if (direction === 'up' && row.previousElementSibling) {
+    row.parentElement.insertBefore(row, row.previousElementSibling);
+  } else if (direction === 'down' && row.nextElementSibling) {
+    row.parentElement.insertBefore(row.nextElementSibling, row);
+  }
+}
+
+function bindNavigationEditor() {
+  const editor = document.getElementById('navEditor');
+  if (!editor || editor.dataset.bound) return;
+  editor.dataset.bound = '1';
+
+  editor.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-nav-action]');
+    if (!btn) return;
+    e.preventDefault();
+
+    const action = btn.dataset.navAction;
+    const scope = btn.dataset.navScope;
+
+    if (action === 'add-header') {
+      const tbody = document.querySelector('#headerNavTable tbody');
+      clearNavEmptyRow(tbody);
+      tbody.insertAdjacentHTML('beforeend', headerNavRowHtml());
+      return;
+    }
+
+    if (action === 'add-footer-column') {
+      document.getElementById('footerNavEditor').querySelector('.nav-empty-note')?.remove();
+      document.getElementById('footerNavEditor').insertAdjacentHTML('beforeend', footerColumnHtml());
+      return;
+    }
+
+    if (action === 'add-footer-link') {
+      const col = btn.closest('.footer-nav-column');
+      const tbody = col.querySelector('.footer-links-table tbody');
+      clearNavEmptyRow(tbody);
+      tbody.insertAdjacentHTML('beforeend', footerLinkRowHtml());
+      return;
+    }
+
+    const row = btn.closest('tr');
+    const column = btn.closest('.footer-nav-column');
+
+    if (action === 'remove' && scope === 'header' && row) {
+      row.remove();
+      const tbody = document.querySelector('#headerNavTable tbody');
+      if (!tbody.querySelector('tr')) {
+        tbody.innerHTML = '<tr class="nav-empty-row"><td colspan="6" style="color:var(--muted)">No header links yet. Add one below.</td></tr>';
+      }
+      return;
+    }
+
+    if (action === 'remove' && scope === 'footer-link' && row) {
+      const tbody = row.closest('tbody');
+      row.remove();
+      if (!tbody.querySelector('tr')) {
+        tbody.innerHTML = '<tr class="nav-empty-row"><td colspan="5" style="color:var(--muted)">No links in this column.</td></tr>';
+      }
+      return;
+    }
+
+    if (action === 'remove' && scope === 'footer-column' && column) {
+      column.remove();
+      const container = document.getElementById('footerNavEditor');
+      if (!container.querySelector('.footer-nav-column')) {
+        container.innerHTML = '<p class="nav-empty-note">No footer columns yet. Add one below.</p>';
+      }
+      return;
+    }
+
+    if (action === 'move-up' || action === 'move-down') {
+      const direction = action === 'move-up' ? 'up' : 'down';
+      if (scope === 'header' && row) moveNavRow(row, direction);
+      else if (scope === 'footer-link' && row) moveNavRow(row, direction);
+      else if (scope === 'footer-column' && column) moveNavRow(column, direction);
+    }
+  });
+}
+
 async function renderSettings() {
   const s = siteSettings || await API.getSettings();
   pageContent.innerHTML = `
@@ -676,24 +917,41 @@ async function renderSettings() {
         </table>
       </div>
     </div>
-    <div class="card" style="margin-top:18px">
+    <div class="card nav-editor-card" id="navEditor" style="margin-top:18px">
       <h3 style="color:var(--text);font-size:18px;margin-top:0">Navigation (header &amp; footer)</h3>
-      <p style="color:var(--muted);font-size:13px;margin:0 0 12px">Edit top navigation, mobile menu, and footer link columns. Header items support <code>style</code>: <code>ghost</code> or <code>gold</code> for buttons; optional <code>li_class</code>, <code>calendly</code>, <code>contact_key</code> on footer links.</p>
-      <div class="field"><label>Navigation JSON</label><textarea id="navJson" style="min-height:320px;font-family:ui-monospace,monospace">${escapeHtml(JSON.stringify(s.navigation || {}, null, 2))}</textarea></div>
+      <p style="color:var(--muted);font-size:13px;margin:0 0 16px">Manage the top bar, mobile menu, and footer link columns. Calendly links use the Calendly URL from contact settings above. Footer links with a contact field pull email or phone from contact settings.</p>
+
+      <div class="nav-editor-section">
+        <div class="nav-editor-section-head">
+          <h4>Header &amp; mobile menu</h4>
+          <button type="button" class="btn btn-ghost btn-sm" data-nav-action="add-header">Add header link</button>
+        </div>
+        <div class="table-wrap">
+          <table id="headerNavTable">
+            <thead>
+              <tr><th>Label</th><th>Link</th><th>Style</th><th>CSS class</th><th>Calendly</th><th></th></tr>
+            </thead>
+            <tbody>${renderHeaderNavRows(s.navigation?.header)}</tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="nav-editor-section">
+        <div class="nav-editor-section-head">
+          <h4>Footer columns</h4>
+          <button type="button" class="btn btn-ghost btn-sm" data-nav-action="add-footer-column">Add footer column</button>
+        </div>
+        <div id="footerNavEditor" class="footer-nav-columns">${renderFooterNavColumns(s.navigation?.footer_columns)}</div>
+      </div>
     </div>
     <button class="btn btn-primary" id="saveSettingsBtn" type="button" style="margin-top:18px">Save settings</button>
     <div class="status" id="settingsStatus"></div>`;
 
   await CKE.initIn(pageContent);
+  bindNavigationEditor();
 
   document.getElementById('saveSettingsBtn').onclick = async () => {
-    let navigation = s.navigation || {};
-    try {
-      navigation = JSON.parse(document.getElementById('navJson').value || '{}');
-    } catch {
-      alert('Invalid navigation JSON');
-      return;
-    }
+    const navigation = collectNavigationFromForm();
     const payload = {
       site_name: document.getElementById('siteName').value.trim(),
       brand: {
@@ -737,6 +995,7 @@ async function renderSubmissions() {
 async function renderMessages() {
   const messages = await API.getMessages();
   pageContent.innerHTML = `
+    <div class="page-heading"><h2>Messages</h2><p>Advisor and investor communications.</p></div>
     <div class="card table-wrap">
       <table>
         <thead><tr><th>Subject</th><th>From</th><th>Date</th><th>Status</th></tr></thead>
@@ -748,6 +1007,65 @@ async function renderMessages() {
               <td>${new Date(m.created_at).toLocaleString()}</td>
               <td>${m.is_read ? '<span class="tag muted">Read</span>' : '<span class="tag">Unread</span>'}</td>
             </tr>`).join('') : '<tr><td colspan="4">No messages yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+async function renderDocuments() {
+  const investors = await API.getInvestors().catch(() => []);
+  const rows = investors.flatMap(inv => (inv.documents || []).map(doc => ({
+    ...doc,
+    investorName: inv.full_name,
+    investorId: inv.id,
+  })));
+  pageContent.innerHTML = `
+    <div class="page-heading"><h2>Documents</h2><p>Reports and files shared with investor accounts.</p></div>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>Title</th><th>Investor</th><th>Type</th><th>Date</th><th></th></tr></thead>
+        <tbody>
+          ${rows.length ? rows.map(doc => `
+            <tr>
+              <td>${escapeHtml(doc.title)}</td>
+              <td>${escapeHtml(doc.investorName)}</td>
+              <td>${escapeHtml(doc.doc_type || '—')}</td>
+              <td>${new Date(doc.created_at).toLocaleDateString()}</td>
+              <td>${doc.file_url
+                ? `<a class="btn btn-outline btn-sm" href="${escapeAttr(doc.file_url)}" target="_blank" rel="noopener">Open</a>`
+                : `<button class="btn btn-ghost btn-sm manage-investor-doc" data-id="${doc.investorId}" type="button">Manage</button>`}
+              </td>
+            </tr>`).join('') : '<tr><td colspan="5">No documents yet. Add documents from an investor profile.</td></tr>'}
+        </tbody>
+      </table>
+    </div>`;
+  pageContent.querySelectorAll('.manage-investor-doc').forEach(btn => {
+    btn.onclick = async () => {
+      const investors = await API.getInvestors().catch(() => []);
+      await navigate('investors');
+      setTimeout(() => {
+        const inv = investors.find(i => i.id === Number(btn.dataset.id));
+        if (inv) openInvestorEditor(inv, investors);
+      }, 300);
+    };
+  });
+}
+
+async function renderAlerts() {
+  const notifications = await API.getNotifications().catch(() => []);
+  pageContent.innerHTML = `
+    <div class="page-heading"><h2>Alerts</h2><p>Platform notifications for your admin account.</p></div>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>Title</th><th>Message</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody>
+          ${notifications.length ? notifications.map(n => `
+            <tr>
+              <td>${escapeHtml(n.title)}</td>
+              <td>${escapeHtml(n.message)}</td>
+              <td>${new Date(n.created_at).toLocaleString()}</td>
+              <td>${n.is_read ? '<span class="tag muted">Read</span>' : '<span class="tag">Unread</span>'}</td>
+            </tr>`).join('') : '<tr><td colspan="4">No alerts yet.</td></tr>'}
         </tbody>
       </table>
     </div>`;
