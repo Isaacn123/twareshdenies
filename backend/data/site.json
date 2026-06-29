@@ -1,0 +1,63 @@
+{
+  "seo": {
+    "title": "Twaresh Denis — Portfolio Manager & Digital Asset Investment Strategist | Uganda, East Africa",
+    "description": "Twaresh Denis is a Portfolio Manager and Digital Asset Investment Strategist helping institutions, family offices, and high-net-worth investors across Uganda, East Africa, and Africa navigate Bitcoin, digital assets, and global markets through disciplined, risk-managed portfolio strategies.",
+    "canonical": "https://www.twareshdenis.com/"
+  },
+  "brand": {
+    "name": "Twaresh Denis",
+    "tagline": "Portfolio Management · Digital Assets",
+    "badge": "Uganda · East Africa · Global Markets"
+  },
+  "contact": {
+    "email": "contact@twareshdenis.com",
+    "phone": "+256700000000",
+    "linkedin": "https://www.linkedin.com/in/twaresh-denis",
+    "twitter": "https://x.com/twareshdenis",
+    "calendly": "",
+    "waMessage": "Hello Twaresh, I would like to discuss a portfolio consultation."
+  },
+  "hero": {
+    "headline": "Building Wealth Through",
+    "highlight": "Disciplined",
+    "headlineSuffix": "Digital Asset Investing",
+    "subheadline": "Helping entrepreneurs, institutions, and sophisticated investors navigate Bitcoin, digital assets, and global markets through professional portfolio management, strategic risk controls, and data-driven investment decisions."
+  },
+  "stats": {
+    "hero": [
+      { "value": 8, "prefix": "", "suffix": "+", "label": "Years in Active Markets" },
+      { "value": 5, "prefix": "", "suffix": "", "label": "Core Instruments — Spot & Futures" },
+      { "value": 5, "prefix": "$", "suffix": "M", "label": "Peak Portfolio Scale Managed" }
+    ],
+    "record": [
+      { "value": 8, "prefix": "", "suffix": "+", "label": "Years of Active\nMarket Experience" },
+      { "value": 5, "prefix": "", "suffix": "", "label": "Core Instruments\nSpot & Futures" },
+      { "value": 5, "prefix": "$", "suffix": "M", "label": "Peak Portfolio\nScale Managed" },
+      { "value": 50, "prefix": "", "suffix": "%", "label": "5-Year Historical APY\n(Past Performance)†" }
+    ]
+  },
+  "portrait": "/assets/twaresh-photo.jpg",
+  "insights": [
+    {
+      "theme": "iv-1",
+      "meta": "Market Cycles · 8 min read",
+      "title": "Understanding Bitcoin Market Cycles: A Framework for Long-Term Investors",
+      "summary": "How accumulation, expansion, distribution, and contraction phases shape disciplined allocation decisions — and why cycle awareness matters more than prediction.",
+      "url": "#contact"
+    },
+    {
+      "theme": "iv-2",
+      "meta": "Risk Management · 6 min read",
+      "title": "Capital Preservation in Volatile Markets: The Institutional Playbook",
+      "summary": "Position sizing, drawdown controls, and diversification frameworks that allow portfolios to survive volatility — and remain positioned for opportunity.",
+      "url": "#contact"
+    },
+    {
+      "theme": "iv-3",
+      "meta": "Africa & Digital Assets · 7 min read",
+      "title": "The Digital Asset Opportunity for African Investors: A Disciplined Entry Framework",
+      "summary": "Why East Africa's investors are uniquely positioned for the digital asset economy — and how to build exposure responsibly through structured frameworks.",
+      "url": "#contact"
+    }
+  ]
+}

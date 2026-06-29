@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Become an Investor — Twaresh Investment Consult</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/portal-assets/css/tic-theme.css">
+  <style>
+    .auth-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--bg); }
+    .auth-card { width: min(480px, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 32px; box-shadow: var(--shadow); }
+    .auth-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+    .auth-tabs a { flex: 1; text-align: center; padding: 10px; border-radius: 10px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); }
+    .auth-tabs a.active { background: var(--primary-soft); color: var(--primary); border-color: var(--primary-border); }
+    .auth-tabs a:hover:not(.active) { background: var(--surface-2); }
+  </style>
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="brand-mark">T</div>
+      <h1 style="margin:0 0 8px;font-size:26px">Become an Investor</h1>
+      <p style="margin:0 0 20px;color:var(--muted)">Create your client portal account. Access is activated after advisor review.</p>
+      <div class="auth-tabs">
+        <a href="index.html">Sign In</a>
+        <a href="register.html" class="active">Register</a>
+      </div>
+      <form id="registerForm">
+        <div class="field"><label>Full name</label><input id="fullName" required autocomplete="name"></div>
+        <div class="field"><label>Email</label><input id="email" type="email" required autocomplete="email"></div>
+        <div class="field"><label>Phone</label><input id="phone" type="tel" autocomplete="tel"></div>
+        <div class="field"><label>Username</label><input id="username" required autocomplete="username"></div>
+        <div class="field"><label>Password (min. 8 characters)</label><input id="password" type="password" required minlength="8" autocomplete="new-password"></div>
+        <div class="field"><label>Investor type</label>
+          <select id="investorType">
+            <option value="hnwi">High-Net-Worth Individual</option>
+            <option value="entrepreneur">Entrepreneur</option>
+            <option value="executive">Corporate Executive</option>
+            <option value="family_office">Family Office</option>
+            <option value="institutional">Institutional Investor</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit">Create account</button>
+        <div class="status" id="status"></div>
+      </form>
+      <p style="margin-top:18px;font-size:12px;color:var(--muted)"><a href="/" style="color:var(--primary)">← Back to public site</a></p>
+    </div>
+  </div>
+  <script src="js/api.js"></script>
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const status = document.getElementById('status');
+      status.className = 'status';
+      status.textContent = 'Submitting…';
+      try {
+        const res = await API.register({
+          full_name: document.getElementById('fullName').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          username: document.getElementById('username').value.trim(),
+          password: document.getElementById('password').value,
+          investor_type: document.getElementById('investorType').value,
+        });
+        status.textContent = res.message || 'Registration successful.';
+        document.getElementById('registerForm').reset();
+      } catch (err) {
+        status.className = 'status error';
+        status.textContent = err.message || 'Registration failed.';
+      }
+    });
+  </script>
+</body>
+</html>

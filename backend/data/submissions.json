@@ -1,0 +1,12 @@
+[
+  {
+    "id": "a9fc06cf-7a92-4647-a461-f01f2e070bc9",
+    "createdAt": "2026-06-29T13:52:04.389Z",
+    "name": "Test User",
+    "email": "test@example.com",
+    "phone": "",
+    "investor_profile": "Entrepreneur",
+    "interest": "",
+    "message": "Hello"
+  }
+]

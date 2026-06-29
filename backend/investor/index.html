@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Investor Sign In — Twaresh Investment Consult</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/portal-assets/css/tic-theme.css">
+  <style>
+    .auth-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--bg); }
+    .auth-card { width: min(420px, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 32px; box-shadow: var(--shadow); }
+    .auth-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+    .auth-tabs a { flex: 1; text-align: center; padding: 10px; border-radius: 10px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); }
+    .auth-tabs a.active { background: var(--primary-soft); color: var(--primary); border-color: var(--primary-border); }
+    .auth-tabs a:hover:not(.active) { background: var(--surface-2); }
+  </style>
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="brand-mark">T</div>
+      <h1 style="margin:0 0 8px;font-size:26px">Investor Sign In</h1>
+      <p style="margin:0 0 20px;color:var(--muted)">Access your private portfolio dashboard.</p>
+      <div class="auth-tabs">
+        <a href="index.html" class="active">Sign In</a>
+        <a href="register.html">Register</a>
+      </div>
+      <form id="loginForm">
+        <div class="field"><label>Username</label><input id="username" required autocomplete="username"></div>
+        <div class="field"><label>Password</label><input id="password" type="password" required autocomplete="current-password"></div>
+        <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+        <div class="status" id="status"></div>
+      </form>
+      <p style="margin-top:14px;font-size:13px;color:var(--muted);text-align:center">
+        New investor? <a href="register.html" style="color:var(--primary);font-weight:600">Create an account</a>
+      </p>
+      <p style="margin-top:12px;font-size:12px;color:var(--muted)"><a href="/" style="color:var(--primary)">← Back to public site</a></p>
+    </div>
+  </div>
+  <script src="js/api.js"></script>
+  <script>
+    if (API.token()) window.location.href = 'app.html';
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const status = document.getElementById('status');
+      status.className = 'status';
+      try {
+        saveTokens(await API.login(document.getElementById('username').value.trim(), document.getElementById('password').value));
+        await API.me();
+        window.location.href = 'app.html';
+      } catch (err) {
+        clearTokens();
+        status.className = 'status error';
+        status.textContent = err.message?.includes('portal') || err.message?.includes('403')
+          ? 'Your account is pending advisor approval. You will be able to sign in once your portal is activated.'
+          : (err.message || 'Invalid credentials or portal not yet activated.');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: twaresh_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: twareshdenis
+      MYSQL_USER: twaresh
+      MYSQL_PASSWORD: twareshpass
+      MYSQL_ROOT_PASSWORD: rootpass
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: twaresh_phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: rootpass
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "8081:80"
+
+  backend:
+    build: ./backend
+    container_name: twaresh_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_SECRET_KEY: change-me-in-production
+      DJANGO_DEBUG: "1"
+      DJANGO_ALLOWED_HOSTS: "*"
+      MYSQL_HOST: db
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: twareshdenis
+      MYSQL_USER: twaresh
+      MYSQL_PASSWORD: twareshpass
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin123
+      CORS_ORIGINS: http://localhost:8080,http://localhost:8000
+    volumes:
+      - media_data:/app/media
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: twaresh_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  mysql_data:
+  media_data:
