@@ -448,7 +448,7 @@ async function openInvestorEditor(investor, allInvestors) {
         </select>
       </div>
     </div>
-    <div class="field"><label>Portfolio JSON (aum, ytd_return, allocation, etc.)</label><textarea id="inv-portfolio" style="min-height:160px;font-family:ui-monospace,monospace">${escapeHtml(JSON.stringify(p, null, 2))}</textarea></div>
+    ${renderPortfolioEditor(p)}
     <div class="field-richtext"><label>Admin notes</label><textarea id="inv-notes" data-ckeditor>${richTextareaValue(investor?.admin_notes || '')}</textarea></div>
     <div class="field"><label>Document title</label><input id="doc-title" placeholder="Q1 Performance Report"></div>
     <div class="field-richtext"><label>Document description</label><textarea id="doc-description" data-ckeditor placeholder="Optional summary shown in the investor portal"></textarea></div>
@@ -459,10 +459,10 @@ async function openInvestorEditor(investor, allInvestors) {
     <div id="investorActivity" style="margin-top:16px"></div>`;
 
   await CKE.initIn(editor);
+  bindPortfolioEditor();
 
   document.getElementById('saveInvestorBtn').onclick = async () => {
-    let portfolio = {};
-    try { portfolio = JSON.parse(document.getElementById('inv-portfolio').value || '{}'); } catch { alert('Invalid portfolio JSON'); return; }
+    const portfolio = collectPortfolioFromForm(p);
     const payload = {
       full_name: document.getElementById('inv-name').value.trim(),
       email: document.getElementById('inv-email').value.trim(),
