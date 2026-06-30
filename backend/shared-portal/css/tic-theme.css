@@ -109,6 +109,23 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .status { min-height: 22px; margin-top: 14px; color: var(--primary); }
 .status.error { color: var(--danger); }
+
+.settings-section-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.settings-section-status {
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 20px;
+}
+.settings-section-status.success { color: var(--success); }
+.settings-section-status.error { color: var(--danger); }
 .hidden { display: none !important; }
 
 .app-shell {

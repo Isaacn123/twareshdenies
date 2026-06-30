@@ -929,30 +929,100 @@ function bindNavigationEditor() {
   });
 }
 
+function collectBrandContactPayload() {
+  const siteName = document.getElementById('siteName').value.trim();
+  return {
+    site_name: siteName,
+    brand: {
+      name: siteName,
+      tagline: document.getElementById('brandTag').value.trim(),
+      badge: document.getElementById('brandBadge').value.trim(),
+    },
+    contact: {
+      ...(siteSettings?.contact || {}),
+      email: document.getElementById('contactEmail').value.trim(),
+      phone: document.getElementById('contactPhone').value.trim(),
+      calendly: document.getElementById('contactCalendly').value.trim(),
+    },
+  };
+}
+
+function collectHeroSeoPayload() {
+  return {
+    hero: {
+      headline: document.getElementById('heroHeadline').value.trim(),
+      highlight: document.getElementById('heroHighlight').value.trim(),
+      headlineSuffix: document.getElementById('heroSuffix').value.trim(),
+      subheadline: CKE.getValue(document.getElementById('heroSub')),
+    },
+    seo: {
+      ...(siteSettings?.seo || {}),
+      title: document.getElementById('seoTitle').value.trim(),
+      description: CKE.stripHtml(CKE.getValue(document.getElementById('seoDescription'))),
+    },
+  };
+}
+
+function settingsSectionFoot(sectionKey, label) {
+  return `<div class="settings-section-foot">
+    <span class="settings-section-status" id="settingsStatus-${sectionKey}"></span>
+    <button type="button" class="btn btn-primary btn-sm" data-save-section="${sectionKey}">Save ${label}</button>
+  </div>`;
+}
+
+async function saveSettingsSection(sectionKey, payload) {
+  const statusEl = document.getElementById(`settingsStatus-${sectionKey}`);
+  if (!statusEl) return;
+  statusEl.textContent = 'Saving…';
+  statusEl.className = 'settings-section-status';
+  try {
+    siteSettings = await API.patchSettings(payload);
+    statusEl.textContent = 'Saved successfully.';
+    statusEl.className = 'settings-section-status success';
+  } catch (err) {
+    statusEl.textContent = err.message || 'Save failed.';
+    statusEl.className = 'settings-section-status error';
+  }
+}
+
+function bindSettingsSectionSaves() {
+  document.querySelectorAll('[data-save-section]').forEach(btn => {
+    btn.onclick = async () => {
+      const section = btn.dataset.saveSection;
+      if (section === 'brand') await saveSettingsSection('brand', collectBrandContactPayload());
+      if (section === 'hero') await saveSettingsSection('hero', collectHeroSeoPayload());
+      if (section === 'socials') await saveSettingsSection('socials', { socials: collectSocialsFromForm() });
+      if (section === 'navigation') await saveSettingsSection('navigation', { navigation: collectNavigationFromForm() });
+    };
+  });
+}
+
 async function renderSettings() {
   const s = siteSettings || await API.getSettings();
   pageContent.innerHTML = `
     <div class="grid-2">
-      <div class="card">
-        <h3 style="color:var(--text);font-size:18px">Brand & contact</h3>
+      <div class="card settings-section">
+        <h3 style="color:var(--text);font-size:18px;margin-top:0">Brand &amp; contact</h3>
         <div class="field"><label>Site name</label><input id="siteName" value="${escapeAttr(s.site_name || '')}"></div>
         <div class="field"><label>Tagline</label><input id="brandTag" value="${escapeAttr(s.brand?.tagline || '')}"></div>
         <div class="field"><label>Badge</label><input id="brandBadge" value="${escapeAttr(s.brand?.badge || '')}"></div>
         <div class="field"><label>Email</label><input id="contactEmail" value="${escapeAttr(s.contact?.email || '')}"></div>
         <div class="field"><label>Phone</label><input id="contactPhone" value="${escapeAttr(s.contact?.phone || '')}"></div>
         <div class="field"><label>Calendly</label><input id="contactCalendly" value="${escapeAttr(s.contact?.calendly || '')}"></div>
+        ${settingsSectionFoot('brand', 'brand & contact')}
       </div>
-      <div class="card">
-        <h3 style="color:var(--text);font-size:18px">Hero & SEO</h3>
+      <div class="card settings-section">
+        <h3 style="color:var(--text);font-size:18px;margin-top:0">Hero &amp; SEO</h3>
         <div class="field"><label>Hero headline</label><input id="heroHeadline" value="${escapeAttr(s.hero?.headline || '')}"></div>
         <div class="field"><label>Highlighted word</label><input id="heroHighlight" value="${escapeAttr(s.hero?.highlight || '')}"></div>
         <div class="field"><label>Headline suffix</label><input id="heroSuffix" value="${escapeAttr(s.hero?.headlineSuffix || '')}"></div>
         <div class="field-richtext"><label>Subheadline</label><textarea id="heroSub" data-ckeditor>${richTextareaValue(s.hero?.subheadline || '')}</textarea></div>
         <div class="field"><label>SEO title</label><input id="seoTitle" value="${escapeAttr(s.seo?.title || '')}"></div>
         <div class="field-richtext"><label>SEO description</label><textarea id="seoDescription" data-ckeditor>${richTextareaValue(s.seo?.description || '')}</textarea></div>
+        ${settingsSectionFoot('hero', 'hero & SEO')}
       </div>
     </div>
-    <div class="card" style="margin-top:18px">
+    <div class="card settings-section" style="margin-top:18px">
       <h3 style="color:var(--text);font-size:18px;margin-top:0">Social profiles</h3>
       <p style="color:var(--muted);font-size:13px;margin:0 0 16px">Enable platforms and add profile URLs. Only enabled profiles with a URL appear on the public site footer. Optionally show them in the contact section too.</p>
       <div class="table-wrap">
@@ -963,8 +1033,9 @@ async function renderSettings() {
           <tbody>${renderSocialRows(s.socials)}</tbody>
         </table>
       </div>
+      ${settingsSectionFoot('socials', 'social profiles')}
     </div>
-    <div class="card nav-editor-card" id="navEditor" style="margin-top:18px">
+    <div class="card nav-editor-card settings-section" id="navEditor" style="margin-top:18px">
       <h3 style="color:var(--text);font-size:18px;margin-top:0">Navigation (header &amp; footer)</h3>
       <p style="color:var(--muted);font-size:13px;margin:0 0 16px">Manage the top bar, mobile menu, and footer link columns. Calendly links use the Calendly URL from contact settings above. Footer links with a contact field pull email or phone from contact settings.</p>
 
@@ -990,45 +1061,12 @@ async function renderSettings() {
         </div>
         <div id="footerNavEditor" class="footer-nav-columns">${renderFooterNavColumns(s.navigation?.footer_columns)}</div>
       </div>
-    </div>
-    <button class="btn btn-primary" id="saveSettingsBtn" type="button" style="margin-top:18px">Save settings</button>
-    <div class="status" id="settingsStatus"></div>`;
+      ${settingsSectionFoot('navigation', 'navigation')}
+    </div>`;
 
   await CKE.initIn(pageContent);
   bindNavigationEditor();
-
-  document.getElementById('saveSettingsBtn').onclick = async () => {
-    const navigation = collectNavigationFromForm();
-    const payload = {
-      site_name: document.getElementById('siteName').value.trim(),
-      brand: {
-        name: document.getElementById('siteName').value.trim(),
-        tagline: document.getElementById('brandTag').value.trim(),
-        badge: document.getElementById('brandBadge').value.trim(),
-      },
-      contact: {
-        ...s.contact,
-        email: document.getElementById('contactEmail').value.trim(),
-        phone: document.getElementById('contactPhone').value.trim(),
-        calendly: document.getElementById('contactCalendly').value.trim(),
-      },
-      socials: collectSocialsFromForm(),
-      hero: {
-        headline: document.getElementById('heroHeadline').value.trim(),
-        highlight: document.getElementById('heroHighlight').value.trim(),
-        headlineSuffix: document.getElementById('heroSuffix').value.trim(),
-        subheadline: CKE.getValue(document.getElementById('heroSub')),
-      },
-      seo: {
-        ...s.seo,
-        title: document.getElementById('seoTitle').value.trim(),
-        description: CKE.stripHtml(CKE.getValue(document.getElementById('seoDescription'))),
-      },
-      navigation,
-    };
-    siteSettings = await API.saveSettings(payload);
-    document.getElementById('settingsStatus').textContent = 'Settings saved successfully.';
-  };
+  bindSettingsSectionSaves();
 }
 
 async function renderSubmissions() {

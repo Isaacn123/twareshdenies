@@ -84,6 +84,14 @@ const API = {
     });
   },
 
+  patchSettings(payload) {
+    return this.request('/api/admin/settings/', {
+      method: 'PATCH',
+      headers: this.authHeaders(),
+      body: JSON.stringify(payload),
+    });
+  },
+
   getSections() {
     return this.request('/api/admin/sections/', { headers: this.authHeaders() });
   },
