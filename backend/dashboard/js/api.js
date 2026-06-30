@@ -208,8 +208,29 @@ const API = {
     return this.request('/api/admin/notifications/', { headers: this.authHeaders() });
   },
 
+  markNotificationRead(id) {
+    return this.request(`/api/admin/notifications/${id}/mark_read/`, {
+      method: 'POST',
+      headers: this.authHeaders(),
+    });
+  },
+
+  markAllNotificationsRead() {
+    return this.request('/api/admin/notifications/mark_all_read/', {
+      method: 'POST',
+      headers: this.authHeaders(),
+    });
+  },
+
   getMessages() {
     return this.request('/api/admin/messages/', { headers: this.authHeaders() });
+  },
+
+  markMessageRead(id) {
+    return this.request(`/api/admin/messages/${id}/mark_read/`, {
+      method: 'POST',
+      headers: this.authHeaders(),
+    });
   },
 };
 

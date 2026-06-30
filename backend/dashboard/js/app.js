@@ -32,11 +32,127 @@ document.querySelectorAll('.dropdown').forEach(drop => {
     document.querySelectorAll('.dropdown').forEach(d => { if (d !== drop) d.classList.remove('open'); });
     drop.classList.toggle('open');
   });
+  drop.querySelector('.dropdown-menu')?.addEventListener('click', (e) => e.stopPropagation());
 });
 
 document.addEventListener('click', () => {
   document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
 });
+
+let topbarNotifications = [];
+let topbarMessages = [];
+
+function updateTopbarBadges() {
+  const unreadNotes = topbarNotifications.filter(n => !n.is_read);
+  const unreadMsgs = topbarMessages.filter(m => !m.is_read);
+  const noteBadge = document.getElementById('notificationBadge');
+  const msgBadge = document.getElementById('messageBadge');
+  if (noteBadge) {
+    noteBadge.textContent = unreadNotes.length;
+    noteBadge.classList.toggle('hidden', unreadNotes.length === 0);
+  }
+  if (msgBadge) {
+    msgBadge.textContent = unreadMsgs.length;
+    msgBadge.classList.toggle('hidden', unreadMsgs.length === 0);
+  }
+}
+
+function renderNotificationDetail(note) {
+  const detail = document.getElementById('notificationDetail');
+  if (!detail || !note) return;
+  detail.classList.remove('hidden');
+  detail.innerHTML = `
+    <div class="menu-detail-head">
+      <strong>${escapeHtml(note.title)}</strong>
+      <span class="menu-detail-time">${new Date(note.created_at).toLocaleString()}</span>
+    </div>
+    <p class="menu-detail-body">${escapeHtml(note.message)}</p>
+    ${note.link ? `<button type="button" class="btn btn-outline btn-sm menu-detail-action" data-open-link="${escapeAttr(note.link)}">Open related page</button>` : ''}`;
+  detail.querySelector('[data-open-link]')?.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
+    if (note.link.includes('submission') || note.title.toLowerCase().includes('enquir')) navigate('submissions');
+    else navigate('alerts');
+  });
+}
+
+function renderMessageDetail(message) {
+  const detail = document.getElementById('messageDetail');
+  if (!detail || !message) return;
+  detail.classList.remove('hidden');
+  detail.innerHTML = `
+    <div class="menu-detail-head">
+      <strong>${escapeHtml(message.subject)}</strong>
+      <span class="menu-detail-time">${escapeHtml(message.sender_name)} · ${new Date(message.created_at).toLocaleString()}</span>
+    </div>
+    <p class="menu-detail-body">${escapeHtml(message.body)}</p>
+    <button type="button" class="btn btn-outline btn-sm menu-detail-action" id="openMessagesPage">View all messages</button>`;
+  detail.querySelector('#openMessagesPage')?.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
+    navigate('messages');
+  });
+}
+
+function bindTopbarDropdownActions() {
+  const notificationList = document.getElementById('notificationList');
+  const messageList = document.getElementById('messageList');
+
+  notificationList?.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-notification-id]');
+    if (!btn) return;
+    const id = Number(btn.dataset.notificationId);
+    const note = topbarNotifications.find(n => n.id === id);
+    if (!note) return;
+
+    notificationList.querySelectorAll('[data-notification-id]').forEach(el => el.classList.remove('active'));
+    btn.classList.add('active');
+
+    if (!note.is_read) {
+      try {
+        await API.markNotificationRead(id);
+        note.is_read = true;
+        btn.classList.remove('unread');
+        updateTopbarBadges();
+      } catch (err) {
+        console.warn('Could not mark notification read:', err.message);
+      }
+    }
+    renderNotificationDetail(note);
+  });
+
+  messageList?.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-message-id]');
+    if (!btn) return;
+    const id = Number(btn.dataset.messageId);
+    const message = topbarMessages.find(m => m.id === id);
+    if (!message) return;
+
+    messageList.querySelectorAll('[data-message-id]').forEach(el => el.classList.remove('active'));
+    btn.classList.add('active');
+
+    if (!message.is_read) {
+      try {
+        await API.markMessageRead(id);
+        message.is_read = true;
+        btn.classList.remove('unread');
+        updateTopbarBadges();
+      } catch (err) {
+        console.warn('Could not mark message read:', err.message);
+      }
+    }
+    renderMessageDetail(message);
+  });
+
+  document.getElementById('markAllNotificationsBtn')?.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    try {
+      await API.markAllNotificationsRead();
+      topbarNotifications.forEach(n => { n.is_read = true; });
+      await loadTopbarData();
+    } catch (err) {
+      console.warn('Could not mark all notifications read:', err.message);
+    }
+  });
+}
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await API.logout();
@@ -77,6 +193,7 @@ async function init() {
       return {};
     });
     await loadTopbarData();
+    bindTopbarDropdownActions();
     await navigate('overview');
   } catch (err) {
     if (err.status === 401) {
@@ -102,40 +219,32 @@ async function loadTopbarData() {
     API.getMessages().catch(() => []),
   ]);
 
-  const unreadNotes = notifications.filter(n => !n.is_read);
-  const unreadMsgs = messages.filter(m => !m.is_read);
-
-  const noteBadge = document.getElementById('notificationBadge');
-  const msgBadge = document.getElementById('messageBadge');
-  if (noteBadge) {
-    noteBadge.textContent = unreadNotes.length;
-    noteBadge.classList.toggle('hidden', unreadNotes.length === 0);
-  }
-  if (msgBadge) {
-    msgBadge.textContent = unreadMsgs.length;
-    msgBadge.classList.toggle('hidden', unreadMsgs.length === 0);
-  }
+  topbarNotifications = notifications;
+  topbarMessages = messages;
+  updateTopbarBadges();
+  document.getElementById('notificationDetail')?.classList.add('hidden');
+  document.getElementById('messageDetail')?.classList.add('hidden');
 
   const notificationList = document.getElementById('notificationList');
   if (notificationList) {
     notificationList.innerHTML = notifications.length
-      ? notifications.slice(0, 6).map(n => `
-          <div class="menu-item">
+      ? notifications.slice(0, 8).map(n => `
+          <button type="button" class="menu-item${n.is_read ? '' : ' unread'}" data-notification-id="${n.id}">
             <strong>${escapeHtml(n.title)}</strong>
             <small>${escapeHtml(n.message)}</small>
-          </div>`).join('')
-      : '<div class="menu-item"><small>No notifications yet.</small></div>';
+          </button>`).join('')
+      : '<div class="menu-item menu-item-static"><small>No notifications yet.</small></div>';
   }
 
   const messageList = document.getElementById('messageList');
   if (messageList) {
     messageList.innerHTML = messages.length
-      ? messages.slice(0, 6).map(m => `
-          <div class="menu-item">
+      ? messages.slice(0, 8).map(m => `
+          <button type="button" class="menu-item${m.is_read ? '' : ' unread'}" data-message-id="${m.id}">
             <strong>${escapeHtml(m.subject)}</strong>
             <small>${escapeHtml(m.sender_name)} · ${new Date(m.created_at).toLocaleString()}</small>
-          </div>`).join('')
-      : '<div class="menu-item"><small>No messages yet.</small></div>';
+          </button>`).join('')
+      : '<div class="menu-item menu-item-static"><small>No messages yet.</small></div>';
   }
 }
 
