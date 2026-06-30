@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Investor Dashboard — Twaresh Financial Services &amp; Consults Ltd</title>
+<title>Twaresh Financial Services &amp; Consults Ltd — Investor Dashboard</title>
 <meta name="description" content="Twaresh Financial Services & Consults Ltd — HNI Investor Dashboard. Strategic Wealth. Generational Legacy."/>
 
 <!-- Fonts -->
@@ -11,6 +11,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
+
+<!-- Dashboard stylesheet -->
 <link rel="stylesheet" href="assets/css/styles.css"/>
 </head>
 <body>
@@ -30,9 +34,9 @@
   </div>
 
   <div class="user-card">
-    <div class="user-avatar" id="sidebarAvatar">TF</div>
-    <div class="user-name" id="sidebarName">Investor Account</div>
-    <div class="user-role" id="sidebarRole">HNI Investor</div>
+    <div class="user-avatar">TF</div>
+    <div class="user-name">Investor Account</div>
+    <div class="user-role">HNI Investor</div>
     <div class="country-select">
       <span class="country-flag">🇺🇬</span>
       <span class="country-name">Uganda</span>
@@ -43,43 +47,43 @@
   <div class="nav-section">
     <div class="nav-label">Main Menu</div>
 
-    <div class="nav-item active" data-page="overview">
+    <div class="nav-item active" onclick="showPage('overview')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
       Overview
     </div>
-    <div class="nav-item" data-page="portfolio">
+    <div class="nav-item" onclick="showPage('portfolio')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-2.18c.07-.44.18-.86.18-1.3C18 2.12 15.88 0 13.3 0c-1.3 0-2.4.53-3.29 1.38L9 2.5 7.99 1.38C7.1.53 6 0 4.7 0 2.12 0 0 2.12 0 4.7c0 .44.11.86.18 1.3H0v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg>
       Portfolio
     </div>
-    <div class="nav-item" data-page="markets">
+    <div class="nav-item" onclick="showPage('markets')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
       Markets
     </div>
-    <div class="nav-item" data-page="watchlist">
+    <div class="nav-item" onclick="showPage('watchlist')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
       Watchlist
     </div>
-    <div class="nav-item" data-page="transactions">
+    <div class="nav-item" onclick="showPage('transactions')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 14V6c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zm-9-1l-4-4 1.41-1.41L10 10.17l6.59-6.58L18 5l-8 8zm11 4H1v2h20v-2z"/></svg>
       Transactions
     </div>
-    <div class="nav-item" data-page="reports">
+    <div class="nav-item" onclick="showPage('reports')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
       Reports
     </div>
-    <div class="nav-item" data-page="documents">
+    <div class="nav-item" onclick="showPage('documents')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
       Documents
     </div>
-    <div class="nav-item" data-page="alerts">
+    <div class="nav-item" onclick="showPage('alerts')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
       Alerts
     </div>
-    <div class="nav-item" data-page="settings">
+    <div class="nav-item" onclick="showPage('settings')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
       Settings
     </div>
-    <div class="nav-item" data-page="support">
+    <div class="nav-item" onclick="showPage('support')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
       Support
     </div>
@@ -101,7 +105,7 @@
   <!-- TOP BAR -->
   <div class="topbar">
     <div class="topbar-left">
-      <div class="topbar-greeting" id="topbarGreeting">Welcome back,</div>
+      <div class="topbar-greeting">Welcome back,</div>
       <div class="topbar-title">
         TWARESH FINANCIAL SERVICES &amp; CONSULTS LTD
         <div class="verified-badge">
@@ -119,17 +123,14 @@
         </svg>
         Download Report
       </button>
-      <div class="icon-btn" id="notifBtn" role="button" tabindex="0" aria-label="Alerts">
+      <div class="icon-btn">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
         <div class="notif-dot"></div>
       </div>
-      <div class="user-pill" id="userPill">
-        <div class="user-pill-av" id="userPillAv">TF</div>
-        <span class="user-pill-name" id="userPillName">HNI Investor</span>
+      <div class="user-pill">
+        <div class="user-pill-av">TF</div>
+        <span class="user-pill-name">HNI Investor</span>
         <span style="color:var(--text3);font-size:10px;margin-left:2px">▾</span>
-        <div class="user-menu hidden" id="userMenu">
-          <button type="button" id="logoutBtn">Sign out</button>
-        </div>
       </div>
     </div>
   </div>
@@ -144,8 +145,8 @@
           <svg viewBox="0 0 24 24" fill="#3b82f6"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
         </div>
         <div class="kpi-label">Total Net Worth</div>
-        <div class="kpi-value" id="kpiNetWorth">$2,989,470</div>
-        <div class="kpi-change up" id="kpiNetWorthChange">
+        <div class="kpi-value">$2,989,470</div>
+        <div class="kpi-change up">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg>
           +$245,780 (8.95%) vs last month
         </div>
@@ -157,8 +158,8 @@
           <svg viewBox="0 0 24 24" fill="#22c55e"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/></svg>
         </div>
         <div class="kpi-label">Total Invested</div>
-        <div class="kpi-value" id="kpiInvested">$2,250,000</div>
-        <div class="kpi-change up" id="kpiInvestedChange">
+        <div class="kpi-value">$2,250,000</div>
+        <div class="kpi-change up">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg>
           +$180,450 (8.69%) vs last month
         </div>
@@ -170,8 +171,8 @@
           <svg viewBox="0 0 24 24" fill="#8b5cf6"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
         </div>
         <div class="kpi-label">Total Returns</div>
-        <div class="kpi-value" id="kpiReturns">$739,470</div>
-        <div class="kpi-change up" id="kpiReturnsChange">
+        <div class="kpi-value">$739,470</div>
+        <div class="kpi-change up">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg>
           +$65,330 (9.69%) vs last month
         </div>
@@ -201,17 +202,17 @@
           <div class="widget">
             <div class="widget-header">
               <span class="widget-title">Asset Allocation</span>
-              <span class="widget-link" data-page="portfolio">View full allocation →</span>
+              <span class="widget-link" onclick="showPage('portfolio')">View full allocation →</span>
             </div>
             <div class="allocation-wrap">
               <div class="donut-container">
                 <canvas id="donutChart"></canvas>
                 <div class="donut-center">
-                  <div class="donut-pct" id="donutPct">72.4%</div>
-                  <div class="donut-label" id="donutLabel">Bitcoin (BTC)</div>
+                  <div class="donut-pct">72.4%</div>
+                  <div class="donut-label">Bitcoin (BTC)</div>
                 </div>
               </div>
-              <div class="allocation-legend" id="allocationLegend">
+              <div class="allocation-legend">
                 <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#f59e0b"></div><span class="legend-name">Bitcoin (BTC)</span></div><span class="legend-pct">72.4%</span></div>
                 <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#3b82f6"></div><span class="legend-name">Ethereum (ETH)</span></div><span class="legend-pct">12.6%</span></div>
                 <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#10b981"></div><span class="legend-name">Solana (SOL)</span></div><span class="legend-pct">6.8%</span></div>
@@ -226,11 +227,11 @@
           <div class="widget">
             <div class="widget-header">
               <span class="widget-title">Portfolio Performance</span>
-              <span class="widget-link" data-page="portfolio">View performance →</span>
+              <span class="widget-link" onclick="showPage('portfolio')">View performance →</span>
             </div>
             <div>
-              <span class="perf-val" id="perfVal">$739,470</span>
-              <span class="perf-badge" id="perfBadge">+9.69% YTD</span>
+              <span class="perf-val">$739,470</span>
+              <span class="perf-badge">+9.69% YTD</span>
             </div>
             <div class="perf-sub">Total Returns</div>
             <div class="chart-container"><canvas id="perfChart"></canvas></div>
@@ -241,7 +242,7 @@
         <div class="widget">
           <div class="widget-header">
             <span class="widget-title">Top Holdings</span>
-            <span class="widget-link" data-page="portfolio">View all holdings →</span>
+            <span class="widget-link" onclick="showPage('portfolio')">View all holdings →</span>
           </div>
           <table class="holdings-table">
             <thead>
@@ -250,7 +251,48 @@
                 <th>Holdings</th><th>Value (USD)</th><th>Allocation</th>
               </tr>
             </thead>
-            <tbody id="overviewHoldingsBody"></tbody>
+            <tbody>
+              <tr>
+                <td><div class="asset-name-col"><div class="asset-icon" style="background:#f59e0b20;color:#f59e0b">₿</div><span class="asset-ticker">Bitcoin (BTC)</span></div></td>
+                <td><span class="price-val">$67,842.35</span></td>
+                <td><span class="change-positive">+3.45%</span></td>
+                <td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">22.1503 BTC</span></td>
+                <td><span class="holdings-val">$2,166,504</span></td>
+                <td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:58px"></div><span class="alloc-pct">72.4%</span></div></td>
+              </tr>
+              <tr>
+                <td><div class="asset-name-col"><div class="asset-icon" style="background:#3b82f620;color:#3b82f6">Ξ</div><span class="asset-ticker">Ethereum (ETH)</span></div></td>
+                <td><span class="price-val">$3,512.68</span></td>
+                <td><span class="change-positive">+2.11%</span></td>
+                <td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">7.186 ETH</span></td>
+                <td><span class="holdings-val">$377,133</span></td>
+                <td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:20px"></div><span class="alloc-pct">12.6%</span></div></td>
+              </tr>
+              <tr>
+                <td><div class="asset-name-col"><div class="asset-icon" style="background:#9945ff20;color:#9945ff">◎</div><span class="asset-ticker">Solana (SOL)</span></div></td>
+                <td><span class="price-val">$164.35</span></td>
+                <td><span class="change-positive">+4.21%</span></td>
+                <td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">9,870 SOL</span></td>
+                <td><span class="holdings-val">$203,284</span></td>
+                <td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:11px"></div><span class="alloc-pct">6.8%</span></div></td>
+              </tr>
+              <tr>
+                <td><div class="asset-name-col"><div class="asset-icon" style="background:#00000010;color:#000">🍎</div><span class="asset-ticker">Apple (AAPL)</span></div></td>
+                <td><span class="price-val">$195.58</span></td>
+                <td><span class="change-positive">+1.32%</span></td>
+                <td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">840 Shares</span></td>
+                <td><span class="holdings-val">$54,847</span></td>
+                <td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:3px"></div><span class="alloc-pct">1.8%</span></div></td>
+              </tr>
+              <tr>
+                <td><div class="asset-name-col"><div class="asset-icon" style="background:#f9731620;color:#f97316">🥇</div><span class="asset-ticker">Gold (XAU)</span></div></td>
+                <td><span class="price-val">$2,336.20</span></td>
+                <td><span class="change-positive">+0.85%</span></td>
+                <td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">15.40 oz</span></td>
+                <td><span class="holdings-val">$62,837</span></td>
+                <td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:3px"></div><span class="alloc-pct">2.1%</span></div></td>
+              </tr>
+            </tbody>
           </table>
         </div>
 
@@ -258,9 +300,14 @@
         <div class="widget">
           <div class="widget-header">
             <span class="widget-title">Market Overview</span>
-            <span class="widget-link" data-page="markets">View markets →</span>
+            <span class="widget-link" onclick="showPage('markets')">View markets →</span>
           </div>
-          <div class="market-mini-grid" id="marketMiniGrid"></div>
+          <div class="market-mini-grid">
+            <div class="market-mini-card"><div class="market-mini-name">S&amp;P 500</div><div class="market-mini-price">5,487.03</div><div class="market-mini-chg up">+0.86%</div></div>
+            <div class="market-mini-card"><div class="market-mini-name">NASDAQ</div><div class="market-mini-price">17,862.23</div><div class="market-mini-chg up">+1.12%</div></div>
+            <div class="market-mini-card"><div class="market-mini-name">Gold (XAU)</div><div class="market-mini-price">2,336.20</div><div class="market-mini-chg up">+0.85%</div></div>
+            <div class="market-mini-card"><div class="market-mini-name">Bitcoin (BTC)</div><div class="market-mini-price">67,842.35</div><div class="market-mini-chg up">+3.45%</div></div>
+          </div>
         </div>
       </div>
 
@@ -294,28 +341,28 @@
               <div class="summary-icon blue"><svg viewBox="0 0 24 24" fill="#3b82f6"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
               <span class="summary-label">Total Invested</span>
             </div>
-            <span class="summary-amount" id="summaryInvested">$2,250,000</span>
+            <span class="summary-amount">$2,250,000</span>
           </div>
           <div class="summary-row">
             <div class="summary-left">
               <div class="summary-icon green"><svg viewBox="0 0 24 24" fill="#22c55e"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg></div>
               <span class="summary-label">Total Returns</span>
             </div>
-            <span class="summary-amount" id="summaryReturns">$739,470</span>
+            <span class="summary-amount">$739,470</span>
           </div>
           <div class="summary-row">
             <div class="summary-left">
               <div class="summary-icon purple"><svg viewBox="0 0 24 24" fill="#8b5cf6"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/></svg></div>
               <span class="summary-label">Total Net Worth</span>
             </div>
-            <span class="summary-amount" id="summaryNetWorth">$2,989,470</span>
+            <span class="summary-amount">$2,989,470</span>
           </div>
           <div class="summary-row">
             <div class="summary-left">
               <div class="summary-icon gold"><svg viewBox="0 0 24 24" fill="#f5a623"><path d="M4 6h16v2H4zm2-4h12v2H6zm14 8H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm-2.5 7.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></div>
               <span class="summary-label">Available (Flex) Funds</span>
             </div>
-            <span class="summary-amount" id="summaryFlex">$239,470</span>
+            <span class="summary-amount">$239,470</span>
           </div>
         </div>
 
@@ -341,15 +388,23 @@
   <div id="page-portfolio" class="page">
     <div class="page-heading"><div class="section-title">Portfolio</div><div class="section-sub">Full breakdown of your holdings and performance</div></div>
     <div class="port-stats">
-      <div class="port-stat"><div class="port-stat-label">Total Portfolio Value</div><div class="port-stat-val" id="portStatValue">$2,989,470</div><div class="port-stat-change">▲ +8.95% this month</div></div>
-      <div class="port-stat"><div class="port-stat-label">Unrealised Gains</div><div class="port-stat-val" id="portStatGains">$739,470</div><div class="port-stat-change">▲ +32.9% total return</div></div>
-      <div class="port-stat"><div class="port-stat-label">Flex Cash Available</div><div class="port-stat-val" id="portStatFlex">$239,470</div><div class="port-stat-change gold-clr">Ready to deploy</div></div>
+      <div class="port-stat"><div class="port-stat-label">Total Portfolio Value</div><div class="port-stat-val">$2,989,470</div><div class="port-stat-change">▲ +8.95% this month</div></div>
+      <div class="port-stat"><div class="port-stat-label">Unrealised Gains</div><div class="port-stat-val">$739,470</div><div class="port-stat-change">▲ +32.9% total return</div></div>
+      <div class="port-stat"><div class="port-stat-label">Flex Cash Available</div><div class="port-stat-val">$239,470</div><div class="port-stat-change gold-clr">Ready to deploy</div></div>
     </div>
     <div class="widget">
       <div class="widget-header"><span class="widget-title">Complete Holdings</span></div>
       <table class="holdings-table">
         <thead><tr><th>Asset</th><th>Price (USD)</th><th>24H Change</th><th>Holdings</th><th>Value (USD)</th><th>Allocation</th></tr></thead>
-        <tbody id="portfolioHoldingsBody"></tbody>
+        <tbody>
+          <tr><td><div class="asset-name-col"><div class="asset-icon" style="background:#f59e0b20;color:#f59e0b">₿</div><span class="asset-ticker">Bitcoin (BTC)</span></div></td><td><span class="price-val">$67,842.35</span></td><td><span class="change-positive">+3.45%</span></td><td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">22.1503 BTC</span></td><td><span class="holdings-val">$2,166,504</span></td><td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:58px"></div><span class="alloc-pct">72.4%</span></div></td></tr>
+          <tr><td><div class="asset-name-col"><div class="asset-icon" style="background:#3b82f620;color:#3b82f6">Ξ</div><span class="asset-ticker">Ethereum (ETH)</span></div></td><td><span class="price-val">$3,512.68</span></td><td><span class="change-positive">+2.11%</span></td><td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">7.186 ETH</span></td><td><span class="holdings-val">$377,133</span></td><td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:20px"></div><span class="alloc-pct">12.6%</span></div></td></tr>
+          <tr><td><div class="asset-name-col"><div class="asset-icon" style="background:#9945ff20;color:#9945ff">◎</div><span class="asset-ticker">Solana (SOL)</span></div></td><td><span class="price-val">$164.35</span></td><td><span class="change-positive">+4.21%</span></td><td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">9,870 SOL</span></td><td><span class="holdings-val">$203,284</span></td><td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:11px"></div><span class="alloc-pct">6.8%</span></div></td></tr>
+          <tr><td><div class="asset-name-col"><div class="asset-icon" style="background:#1d346120;color:#1d3461;font-size:10px">US</div><span class="asset-ticker">US Equities</span></div></td><td><span class="price-val">—</span></td><td><span class="change-positive">+1.18%</span></td><td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">Mixed</span></td><td><span class="holdings-val">$122,763</span></td><td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:7px"></div><span class="alloc-pct">4.1%</span></div></td></tr>
+          <tr><td><div class="asset-name-col"><div class="asset-icon" style="background:#00000010;color:#000">🍎</div><span class="asset-ticker">Apple (AAPL)</span></div></td><td><span class="price-val">$195.58</span></td><td><span class="change-positive">+1.32%</span></td><td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">840 Shares</span></td><td><span class="holdings-val">$54,847</span></td><td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:3px"></div><span class="alloc-pct">1.8%</span></div></td></tr>
+          <tr><td><div class="asset-name-col"><div class="asset-icon" style="background:#f9731620;color:#f97316">🥇</div><span class="asset-ticker">Gold (XAU)</span></div></td><td><span class="price-val">$2,336.20</span></td><td><span class="change-positive">+0.85%</span></td><td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">15.40 oz</span></td><td><span class="holdings-val">$62,837</span></td><td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:3px"></div><span class="alloc-pct">2.1%</span></div></td></tr>
+          <tr><td><div class="asset-name-col"><div class="asset-icon" style="background:#64748b20;color:#64748b">💵</div><span class="asset-ticker">Cash &amp; Others</span></div></td><td><span class="price-val">—</span></td><td><span style="color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:12px">—</span></td><td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">Liquid</span></td><td><span class="holdings-val">$59,879</span></td><td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:3px"></div><span class="alloc-pct">2.0%</span></div></td></tr>
+        </tbody>
       </table>
     </div>
   </div>
@@ -403,17 +458,16 @@
   <!-- ════════════════════ STUB PAGES ════════════════════ -->
   <div id="page-watchlist"   class="page"><div class="stub-hero"><div class="stub-icon">👁️</div><div class="stub-title">Watchlist</div><div class="stub-sub">Track your favourite assets and set custom price alerts.</div><div class="coming-badge">COMING SOON</div></div></div>
   <div id="page-reports"     class="page"><div class="stub-hero"><div class="stub-icon">📊</div><div class="stub-title">Reports</div><div class="stub-sub">Download performance reports, tax statements, and portfolio summaries.</div><div class="coming-badge">COMING SOON</div></div></div>
-  <div id="page-documents" class="page"><div id="documentsContent"></div></div>
-  <div id="page-alerts" class="page"><div class="stub-hero"><div class="stub-icon">🔔</div><div class="stub-title">Alerts</div><div class="stub-sub">Set price alerts and get notified on market movements.</div><div class="coming-badge">COMING SOON</div></div></div>
-  <div id="page-settings" class="page"><div id="settingsContent"></div></div>
+  <div id="page-documents"   class="page"><div class="stub-hero"><div class="stub-icon">📄</div><div class="stub-title">Documents</div><div class="stub-sub">Agreements, statements, compliance documents and investment plans.</div><div class="coming-badge">COMING SOON</div></div></div>
+  <div id="page-alerts"      class="page"><div class="stub-hero"><div class="stub-icon">🔔</div><div class="stub-title">Alerts</div><div class="stub-sub">Set price alerts and get notified on market movements.</div><div class="coming-badge">COMING SOON</div></div></div>
+  <div id="page-settings"    class="page"><div class="stub-hero"><div class="stub-icon">⚙️</div><div class="stub-title">Settings</div><div class="stub-sub">Manage your account preferences, security, and notification settings.</div><div class="coming-badge">COMING SOON</div></div></div>
   <div id="page-support"     class="page"><div class="stub-hero"><div class="stub-icon">💬</div><div class="stub-title">Support</div><div class="stub-sub">Connect with your dedicated wealth concierge or browse our help centre.</div><div style="margin-top:20px"><button class="btn-schedule" style="display:inline-block;width:auto;padding:10px 28px;font-size:13px">Schedule a Call with Your Concierge</button></div></div></div>
 
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="js/api.js"></script>
-<script src="assets/js/charts.js"></script>
-<script src="js/app.js"></script>
+<!-- App scripts (charts first, then app logic) -->
+<script src="assets/js/charts.js" defer></script>
+<script src="assets/js/app.js" defer></script>
 
 </body>
 </html>

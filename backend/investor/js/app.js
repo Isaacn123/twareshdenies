@@ -1,356 +1,349 @@
 requireAuth();
 
-const pageContent = document.getElementById('pageContent');
 let profile = null;
-let activeAssetTab = 'crypto';
+let currencyRate = 3662;
 
-const pages = {
-  dashboard: renderDashboard,
-  portfolios: renderPortfolios,
-  watchlist: renderWatchlist,
-  insights: renderInsights,
-  otc: renderOtc,
-  crypto: () => renderAssetsPage('crypto'),
-  signals: renderSignals,
-  reports: renderReports,
-  documents: renderDocuments,
-  alerts: renderAlerts,
-  settings: renderSettings,
-};
+function p() {
+  return profile?.portfolio || {};
+}
 
-document.querySelectorAll('.nav-link[data-page]').forEach(link => {
-  link.addEventListener('click', e => { e.preventDefault(); navigate(link.dataset.page); });
-});
+function esc(text) {
+  return String(text ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[ch]));
+}
 
-document.getElementById('profileDropdown').querySelector('button').onclick = e => {
-  e.stopPropagation();
-  document.getElementById('profileDropdown').classList.toggle('open');
-};
-document.addEventListener('click', () => document.getElementById('profileDropdown').classList.remove('open'));
-document.getElementById('logoutBtn').onclick = () => { clearTokens(); window.location.href = 'login'; };
-document.getElementById('promoBtn').onclick = () => navigate('settings');
-document.getElementById('createPortfolioBtn').onclick = () => navigate('portfolios');
-document.getElementById('notifBtn').onclick = () => navigate('alerts');
+function initials(name) {
+  return (name || 'I').trim().charAt(0).toUpperCase();
+}
 
-function p() { return profile?.portfolio || {}; }
+function roleLabel(type) {
+  return String(type || 'investor').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
 
-function greeting() {
+function flattenAssets(assets) {
+  if (!assets) return [];
+  return Object.values(assets).flat();
+}
+
+function changeClass(value) {
+  const n = Number(value);
+  if (Number.isNaN(n) || n === 0) return '';
+  return n > 0 ? 'change-positive' : 'change-negative';
+}
+
+function formatChange(value) {
+  const n = Number(value);
+  if (Number.isNaN(n)) return '—';
+  return (n > 0 ? '+' : '') + n.toFixed(2) + '%';
+}
+
+function formatPrice(value) {
+  if (value == null || value === '') return '—';
+  if (typeof value === 'string' && value.startsWith('$')) return value;
+  return '$' + Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+function formatValue(value) {
+  if (value == null || value === '') return '—';
+  if (typeof value === 'string' && value.startsWith('$')) return value;
+  return '$' + Number(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function setChangeEl(el, changeText, pctText) {
+  if (!el) return;
+  const parts = [changeText, pctText].filter(Boolean);
+  el.innerHTML = parts.length
+    ? `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg> ${esc(parts.join(' '))} vs last month`
+    : '';
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+
+  const target = document.getElementById('page-' + id);
+  if (target) target.classList.add('active');
+
+  document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+    if (item.dataset.page === id) item.classList.add('active');
+  });
+
+  if (id === 'documents') renderDocumentsPage();
+  if (id === 'settings') renderSettingsPage();
+  if (id === 'overview') window.TFCharts?.init(p());
+}
+
+window.showPage = showPage;
+
+function renderAllocationLegend(allocation) {
+  const legend = document.getElementById('allocationLegend');
+  if (!legend) return;
+  legend.innerHTML = (allocation || []).map(item => `
+    <div class="legend-item">
+      <div class="legend-left">
+        <div class="legend-dot" style="background:${esc(item.color || '#94a3b8')}"></div>
+        <span class="legend-name">${esc(item.name)}</span>
+      </div>
+      <span class="legend-pct">${item.pct}%</span>
+    </div>`).join('');
+
+  const top = allocation?.[0];
+  const pctEl = document.getElementById('donutPct');
+  const labelEl = document.getElementById('donutLabel');
+  if (pctEl) pctEl.textContent = top ? `${top.pct}%` : '—';
+  if (labelEl) labelEl.textContent = top?.name || 'Allocation';
+}
+
+function assetColors(symbol) {
+  const map = { BTC: '#f59e0b', ETH: '#3b82f6', SOL: '#9945ff', AAPL: '#111827', XAU: '#f97316', MSFT: '#2563eb', UST: '#64748b', VNQ: '#8b5cf6', USD: '#64748b' };
+  return map[symbol] || '#64748b';
+}
+
+function holdingsRow(asset, maxAlloc) {
+  const alloc = Number(asset.allocation || 0);
+  const barWidth = maxAlloc ? Math.max(3, Math.round((alloc / maxAlloc) * 58)) : 3;
+  const symbol = esc(asset.symbol || asset.name?.slice(0, 2) || '—');
+  const color = assetColors(asset.symbol);
+  return `<tr>
+    <td><div class="asset-name-col">
+      <div class="asset-icon" style="background:${color}20;color:${color}">${symbol.slice(0, 2)}</div>
+      <span class="asset-ticker">${esc(asset.name)}${asset.symbol ? ` (${esc(asset.symbol)})` : ''}</span>
+    </div></td>
+    <td><span class="price-val">${formatPrice(asset.price)}</span></td>
+    <td><span class="${changeClass(asset.change_24h)}">${formatChange(asset.change_24h)}</span></td>
+    <td><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">${esc(asset.holdings || '—')}</span></td>
+    <td><span class="holdings-val">${formatValue(asset.value)}</span></td>
+    <td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:${barWidth}px"></div><span class="alloc-pct">${alloc ? alloc + '%' : '—'}</span></div></td>
+  </tr>`;
+}
+
+function renderHoldingsTables() {
+  const assets = flattenAssets(p().assets);
+  const maxAlloc = assets.reduce((max, a) => Math.max(max, Number(a.allocation || 0)), 0);
+  const rows = assets.length
+    ? assets.map(a => holdingsRow(a, maxAlloc)).join('')
+    : '<tr><td colspan="6" style="color:var(--text3);padding:16px 0">No holdings data yet.</td></tr>';
+
+  ['overviewHoldingsBody', 'portfolioHoldingsBody'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = id === 'overviewHoldingsBody' ? assets.slice(0, 5).map(a => holdingsRow(a, maxAlloc)).join('') || rows : rows;
+  });
+}
+
+function renderMarketMini() {
+  const grid = document.getElementById('marketMiniGrid');
+  const items = p().market_snapshot || [];
+  if (!grid) return;
+  grid.innerHTML = items.length
+    ? items.map(item => {
+      const cls = Number(item.change) >= 0 ? 'up' : 'down';
+      return `<div class="market-mini-card">
+        <div class="market-mini-name">${esc(item.name)}</div>
+        <div class="market-mini-price">${esc(item.value)}</div>
+        <div class="market-mini-chg ${cls}">${formatChange(item.change)}</div>
+      </div>`;
+    }).join('')
+    : '<div style="color:var(--text3);font-size:13px">Market data unavailable.</div>';
+}
+
+function renderSummaryRows() {
+  const map = [
+    ['summaryInvested', p().total_invested],
+    ['summaryReturns', p().total_returns],
+    ['summaryNetWorth', p().net_worth],
+    ['summaryFlex', p().flex_funds || p().available_funds],
+  ];
+  map.forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value || '—';
+  });
+}
+
+function applyPortfolioData() {
+  const portfolio = p();
+
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el && value != null) el.textContent = value;
+  };
+
+  setText('kpiNetWorth', portfolio.net_worth);
+  setText('kpiInvested', portfolio.total_invested);
+  setText('kpiReturns', portfolio.total_returns);
+  setChangeEl(document.getElementById('kpiNetWorthChange'), portfolio.net_worth_change, portfolio.net_worth_change_pct);
+  setChangeEl(document.getElementById('kpiInvestedChange'), portfolio.total_invested_change, portfolio.total_invested_change_pct);
+  setChangeEl(document.getElementById('kpiReturnsChange'), portfolio.total_returns_change, portfolio.total_returns_change_pct);
+
+  setText('perfVal', portfolio.performance?.total_returns || portfolio.total_returns);
+  setText('perfBadge', portfolio.performance?.ytd_pct || portfolio.ytd_return || '—');
+
+  setText('portStatValue', portfolio.net_worth || portfolio.aum);
+  setText('portStatGains', portfolio.total_returns);
+  setText('portStatFlex', portfolio.flex_funds || portfolio.available_funds || '—');
+
+  renderAllocationLegend(portfolio.allocation || []);
+  renderHoldingsTables();
+  renderMarketMini();
+  renderSummaryRows();
+  window.TFCharts?.init(portfolio);
+}
+
+function initProfileUI() {
+  const name = profile.full_name || 'Investor';
+  const role = roleLabel(profile.investor_type);
+  const firstName = name.split(' ')[0];
   const hour = new Date().getHours();
   const period = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
-  const name = (profile?.full_name || 'Investor').split(' ')[0];
-  document.getElementById('greetingText').textContent = `Good ${period}, ${name}`;
+
+  document.getElementById('sidebarAvatar').textContent = initials(name);
+  document.getElementById('sidebarName').textContent = name;
+  document.getElementById('sidebarRole').textContent = role;
+  document.getElementById('userPillAv').textContent = initials(name);
+  document.getElementById('userPillName').textContent = role;
+  document.getElementById('topbarGreeting').textContent = `Good ${period}, ${firstName}`;
+}
+
+function initCurrencyConverter() {
+  const currency = p().currency || {};
+  if (currency.rate) {
+    const match = String(currency.rate).match(/([\d.]+)/g);
+    if (match?.length) currencyRate = Number(match[match.length - 1]) || currencyRate;
+  }
+
+  const input = document.getElementById('usd-input');
+  const output = document.getElementById('ugx-output');
+  if (!input || !output) return;
+
+  const convert = () => {
+    const usd = parseFloat(input.value) || 0;
+    output.textContent = Math.round(usd * currencyRate).toLocaleString();
+  };
+
+  input.addEventListener('input', convert);
+  window.swapCurrency = () => {
+    const usd = parseFloat(input.value) || 0;
+    input.value = Math.round(usd * currencyRate);
+    convert();
+  };
+  convert();
+}
+
+async function renderDocumentsPage() {
+  const container = document.getElementById('documentsContent');
+  if (!container || container.dataset.loaded) return;
+
+  container.innerHTML = '<div class="page-heading"><div class="section-title">Documents</div><div class="section-sub">Loading shared reports and statements…</div></div>';
+  try {
+    const docs = await API.documents();
+    container.dataset.loaded = '1';
+    container.innerHTML = `
+      <div class="page-heading"><div class="section-title">Documents</div><div class="section-sub">Reports and statements shared with you.</div></div>
+      <div class="widget">
+        <div class="widget-header"><span class="widget-title">Your documents</span></div>
+        <table class="holdings-table">
+          <thead><tr><th>Title</th><th>Type</th><th>Date</th><th></th></tr></thead>
+          <tbody>${docs.length ? docs.map(doc => `
+            <tr>
+              <td class="asset-ticker">${esc(doc.title)}</td>
+              <td>${esc(doc.doc_type || '—')}</td>
+              <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">${new Date(doc.created_at).toLocaleDateString()}</td>
+              <td>${doc.file_url ? `<a class="btn-download" style="display:inline-flex;padding:6px 12px;font-size:11px;text-decoration:none" href="${esc(doc.file_url)}" target="_blank" rel="noopener">Open</a>` : '—'}</td>
+            </tr>`).join('') : '<tr><td colspan="4" style="color:var(--text3)">No documents shared yet.</td></tr>'}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (err) {
+    container.innerHTML = `<div class="stub-hero"><div class="stub-title">Documents unavailable</div><div class="stub-sub">${esc(err.message)}</div></div>`;
+  }
+}
+
+async function renderSettingsPage() {
+  const container = document.getElementById('settingsContent');
+  if (!container || container.dataset.loaded) return;
+  container.dataset.loaded = '1';
+
+  const msgs = await API.messages().catch(() => []);
+  container.innerHTML = `
+    <div class="page-heading"><div class="section-title">Settings</div><div class="section-sub">Account details and advisor messages.</div></div>
+    <div class="content-grid" style="grid-template-columns:1fr 1fr">
+      <div class="widget">
+        <div class="widget-header"><span class="widget-title">Profile</span></div>
+        <div class="summary-row"><span class="summary-label">Name</span><span class="summary-amount">${esc(profile.full_name)}</span></div>
+        <div class="summary-row"><span class="summary-label">Email</span><span class="summary-amount">${esc(profile.email || '—')}</span></div>
+        <div class="summary-row"><span class="summary-label">Type</span><span class="summary-amount">${esc(roleLabel(profile.investor_type))}</span></div>
+      </div>
+      <div class="widget">
+        <div class="widget-header"><span class="widget-title">Message advisor</span></div>
+        <div class="field"><label>Subject</label><input id="msgSubject" value="Consultation request"></div>
+        <div class="field"><label>Message</label><textarea id="msgBody" rows="4" style="width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px"></textarea></div>
+        <button class="btn-primary" id="sendMsgBtn" type="button" style="width:auto;padding:10px 18px">Send message</button>
+      </div>
+    </div>
+    <div class="widget" style="margin-top:16px">
+      <div class="widget-header"><span class="widget-title">Message history</span></div>
+      ${msgs.length ? msgs.map(m => `
+        <div class="summary-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <strong>${esc(m.subject)}</strong>
+          <span style="color:var(--text3);font-size:12px">${esc(m.sender_name)} · ${new Date(m.created_at).toLocaleString()}</span>
+          <span style="font-size:13px;color:var(--text2)">${esc(m.body)}</span>
+        </div>`).join('') : '<p style="color:var(--text3);margin:0">No messages yet.</p>'}
+    </div>`;
+
+  document.getElementById('sendMsgBtn').onclick = async () => {
+    await API.sendMessage(document.getElementById('msgBody').value, document.getElementById('msgSubject').value);
+    container.dataset.loaded = '';
+    renderSettingsPage();
+  };
+}
+
+function bindUI() {
+  document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+    item.addEventListener('click', () => showPage(item.dataset.page));
+  });
+
+  document.addEventListener('click', e => {
+    const link = e.target.closest('[data-page]');
+    if (link && link.classList.contains('widget-link')) {
+      e.preventDefault();
+      showPage(link.dataset.page);
+    }
+  });
+
+  document.getElementById('notifBtn')?.addEventListener('click', () => showPage('alerts'));
+  document.querySelectorAll('.btn-schedule').forEach(btn => {
+    btn.addEventListener('click', () => showPage('support'));
+  });
+
+  document.querySelector('.btn-download')?.addEventListener('click', () => {
+    alert('Report generation coming soon.\nYour wealth concierge can provide a detailed PDF report.');
+  });
+
+  const userPill = document.getElementById('userPill');
+  const userMenu = document.getElementById('userMenu');
+  userPill?.addEventListener('click', e => {
+    e.stopPropagation();
+    userMenu?.classList.toggle('hidden');
+  });
+  document.addEventListener('click', () => userMenu?.classList.add('hidden'));
+  document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    clearTokens();
+    window.location.href = 'login';
+  });
 }
 
 async function init() {
+  bindUI();
   try {
     profile = await API.me();
-    document.getElementById('profileName').textContent = profile.full_name;
-    document.getElementById('profileRole').textContent = (profile.investor_type || 'investor').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    document.getElementById('avatar').textContent = profile.full_name.charAt(0).toUpperCase();
-    greeting();
-    navigate('dashboard');
+    initProfileUI();
+    applyPortfolioData();
+    initCurrencyConverter();
+    showPage('overview');
   } catch {
     clearTokens();
     window.location.href = 'login';
   }
 }
 
-function navigate(page) {
-  document.querySelectorAll('.nav-link[data-page]').forEach(l => l.classList.toggle('active', l.dataset.page === page));
-  pages[page]?.();
-}
-
-function renderDashboard() {
-  const d = p();
-  pageContent.innerHTML = `
-    <div class="dash-grid">
-      <div class="dash-stats">
-        ${metricCard('Total Net Worth', d.net_worth, d.net_worth_change, d.net_worth_change_pct, 'spark-net', d.sparklines?.net_worth)}
-        ${metricCard('Total Invested', d.total_invested, d.total_invested_change, d.total_invested_change_pct)}
-        ${metricCard('Total Returns', d.total_returns, d.total_returns_change, d.total_returns_change_pct)}
-        ${metricCard('Investments', d.investments_count, null, null, null, null, `${d.asset_classes || 6} Asset Classes`, true)}
-      </div>
-
-      <div class="dash-mid">
-        <div class="card">
-          <div class="card-head"><h3>Portfolio Allocation</h3></div>
-          <div class="alloc-layout">
-            <div class="chart-wrap sm"><canvas id="allocChart"></canvas></div>
-            <div class="legend-list" id="allocLegend"></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-head">
-            <div>
-              <h3>Portfolio Performance</h3>
-              <div class="perf-head"><div class="big">${esc(d.performance?.total_returns || d.total_returns)}</div></div>
-              <div class="perf-ytd">${esc(d.performance?.ytd_pct || d.ytd_return || '')} (YTD)</div>
-            </div>
-            <select class="filter-select" style="padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:12px"><option>YTD</option></select>
-          </div>
-          <div class="chart-wrap"><canvas id="perfChart"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-head"><h3>Currency Converter</h3></div>
-          ${renderFx(d.currency)}
-        </div>
-      </div>
-
-      <div class="dash-lower">
-        <div class="card">
-          <div class="card-head"><h3>Assets Overview</h3></div>
-          ${assetTabs()}
-          <div class="table-wrap" id="assetTable"></div>
-        </div>
-        <div style="display:grid;gap:14px">
-          <div class="card">
-            <div class="card-head"><h3>OTC Trades</h3><button class="btn btn-outline btn-sm" type="button" onclick="navigate('otc')">View all</button></div>
-            <div class="side-list">${(d.otc_trades || []).slice(0, 3).map(otcItem).join('') || emptyBlock()}</div>
-          </div>
-          <div class="card">
-            <div class="card-head"><h3>Market Snapshot</h3></div>
-            <div class="side-list">${(d.market_snapshot || []).map(marketItem).join('') || emptyBlock()}</div>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div class="card-head" style="margin-bottom:12px"><h3>Smart Investment Ideas for You</h3></div>
-        <div class="dash-ideas">${(d.smart_ideas || []).map(ideaCard).join('') || emptyBlock('No ideas at this time.')}</div>
-      </div>
-    </div>`;
-
-  bindAssetTabs();
-  renderAssetTable(activeAssetTab);
-  renderCharts();
-}
-
-function metricCard(label, value, change, pct, sparkId, sparkData, sub, countMode) {
-  const changeHtml = change && pct
-    ? `<div class="metric-change">${esc(change)} / ${esc(pct)}</div>` : sub && countMode
-    ? `<div class="metric-sub">Across ${esc(sub)}</div>` : '';
-  const spark = sparkId && sparkData?.length
-    ? `<div class="spark-wrap"><canvas id="${sparkId}"></canvas></div>` : '';
-  return `<div class="card metric-card">
-    <div>
-      <div class="label">${esc(label)}</div>
-      <div class="value">${esc(value || '—')}</div>
-      ${changeHtml}
-      ${spark}
-    </div>
-    <div class="metric-icon">${countMode ? '◉' : '↗'}</div>
-  </div>`;
-}
-
-function renderFx(fx) {
-  fx = fx || { from: 'USD', to: 'EUR', from_amount: 1000, to_amount: 920, rate: '1 USD = 0.92 EUR' };
-  return `<div class="fx-box">
-    <div class="fx-row">
-      <div class="field" style="margin:0"><label>From</label><input id="fxFrom" value="${esc(fx.from_amount)}" type="number"></div>
-      <button class="fx-swap" type="button" id="fxSwap">⇄</button>
-      <div class="field" style="margin:0"><label>To</label><input id="fxTo" value="${esc(fx.to_amount)}" readonly></div>
-    </div>
-    <div class="fx-rate">${esc(fx.rate || `${fx.from} → ${fx.to}`)}</div>
-  </div>`;
-}
-
-function assetTabs() {
-  const tabs = ['Stocks', 'Crypto', 'Commodities', 'Bonds', 'Real Estate', 'Cash'];
-  const keys = ['stocks', 'crypto', 'commodities', 'bonds', 'real_estate', 'cash'];
-  return `<div class="tabs">${tabs.map((t, i) =>
-    `<button class="tab ${keys[i] === activeAssetTab ? 'active' : ''}" data-tab="${keys[i]}" type="button">${t}</button>`
-  ).join('')}</div>`;
-}
-
-function bindAssetTabs() {
-  pageContent.querySelectorAll('.tab[data-tab]').forEach(btn => {
-    btn.onclick = () => {
-      activeAssetTab = btn.dataset.tab;
-      pageContent.querySelectorAll('.tab[data-tab]').forEach(b => b.classList.toggle('active', b === btn));
-      renderAssetTable(activeAssetTab);
-    };
-  });
-}
-
-function renderAssetTable(tab) {
-  const assets = (p().assets || {})[tab] || [];
-  const el = document.getElementById('assetTable');
-  if (!el) return;
-  el.innerHTML = `<table>
-    <thead><tr><th>Asset</th><th>Price (USD)</th><th>24h Change</th><th>Holdings</th><th>Value (USD)</th><th>Allocation</th></tr></thead>
-    <tbody>${assets.length ? assets.map(assetRow).join('') : `<tr><td colspan="6">${emptyBlock()}</td></tr>`}</tbody>
-  </table>`;
-}
-
-function assetRow(a) {
-  const ch = Number(a.change_24h);
-  const cls = ch >= 0 ? 'pos' : 'neg';
-  return `<tr>
-    <td><div class="asset-cell"><div class="asset-icon">${esc((a.symbol || a.name || '?').slice(0, 3))}</div><div>${esc(a.name)}<small>${esc(a.symbol || '')}</small></div></div></td>
-    <td>${fmtUsd(a.price)}</td>
-    <td class="${cls}">${ch >= 0 ? '+' : ''}${ch}%</td>
-    <td>${esc(a.holdings)}</td>
-    <td>${fmtUsd(a.value)}</td>
-    <td>${esc(a.allocation)}%</td>
-  </tr>`;
-}
-
-function otcItem(t) {
-  return `<div class="side-item">
-    <strong>${esc(t.title)}</strong>
-    <small>Settlement ${esc(t.settlement)}</small>
-    <div class="side-item-row"><span>${esc(t.amount)}</span><span class="badge ${t.side?.toLowerCase() === 'sell' ? 'sell' : 'buy'}">${esc(t.side || 'Buy')}</span></div>
-  </div>`;
-}
-
-function marketItem(m) {
-  const ch = Number(m.change);
-  return `<div class="side-item">
-    <div class="side-item-row"><strong>${esc(m.name)}</strong><span>${esc(m.value)}</span></div>
-    <small class="${ch >= 0 ? 'pos' : 'neg'}">${ch >= 0 ? '+' : ''}${ch}% today</small>
-  </div>`;
-}
-
-function ideaCard(idea) {
-  return `<div class="card idea-card">
-    <div class="idea-icon">★</div>
-    <span class="badge muted">${esc(idea.category)}</span>
-    <h4>${esc(idea.title)}</h4>
-    <p>${esc(idea.description)}</p>
-    <div class="min-inv">Min. Investment<strong>${esc(idea.min_investment)}</strong></div>
-  </div>`;
-}
-
-function renderCharts() {
-  const d = p();
-  const alloc = d.allocation || [];
-  if (alloc.length) {
-    TICCharts.donut(
-      'allocChart',
-      alloc.map(a => a.name),
-      alloc.map(a => a.pct),
-      alloc.map(a => a.color || '#7c3aed'),
-      d.allocation_center || '',
-      'USD'
-    );
-    const leg = document.getElementById('allocLegend');
-    if (leg) leg.innerHTML = alloc.map(a =>
-      `<div class="legend-item"><div class="legend-left"><span class="legend-dot" style="background:${a.color || '#7c3aed'}"></span>${esc(a.name)}</div><strong>${a.pct}%</strong></div>`
-    ).join('');
-  }
-  const perf = d.performance || {};
-  if (perf.labels?.length) TICCharts.line('perfChart', perf.labels, perf.values);
-  if (d.sparklines?.net_worth?.length) TICCharts.sparkline('spark-net', d.sparklines.net_worth);
-}
-
-function renderPortfolios() {
-  const d = p();
-  pageContent.innerHTML = `<div class="page-heading"><h2>Portfolios</h2><p>Your managed investment portfolios.</p></div>
-    <div class="grid-2">
-      <div class="card"><div class="label">Net Worth</div><div class="stat-value">${esc(d.net_worth)}</div></div>
-      <div class="card"><div class="label">Total Invested</div><div class="stat-value">${esc(d.total_invested)}</div></div>
-    </div>
-    <div class="card" style="margin-top:16px"><div class="card-head"><h3>Allocation</h3></div>${renderAllocationTable(d.allocation)}</div>`;
-}
-
-function renderWatchlist() {
-  const list = p().watchlist || p().assets?.crypto || [];
-  pageContent.innerHTML = `<div class="page-heading"><h2>Watchlist</h2><p>Assets you're monitoring.</p></div>
-    <div class="card table-wrap"><table><thead><tr><th>Asset</th><th>Price</th><th>24h</th></tr></thead><tbody>
-      ${list.map(a => `<tr><td>${esc(a.name)}</td><td>${fmtUsd(a.price)}</td><td class="${Number(a.change_24h) >= 0 ? 'pos' : 'neg'}">${a.change_24h}%</td></tr>`).join('')}
-    </tbody></table></div>`;
-}
-
-function renderInsights() {
-  pageContent.innerHTML = `<div class="page-heading"><h2>Market Insights</h2><p>Research and commentary from your advisor.</p></div>
-    <div class="dash-ideas">${(p().smart_ideas || []).map(ideaCard).join('') || emptyBlock()}</div>
-    <div class="card" style="margin-top:16px"><div class="card-head"><h3>Market Snapshot</h3></div><div class="side-list">${(p().market_snapshot || []).map(marketItem).join('')}</div></div>`;
-}
-
-function renderOtc() {
-  pageContent.innerHTML = `<div class="page-heading"><h2>OTC Trades</h2><p>Over-the-counter block trades and settlements.</p></div>
-    <div class="card side-list">${(p().otc_trades || []).map(otcItem).join('') || emptyBlock()}</div>`;
-}
-
-function renderAssetsPage(tab) {
-  activeAssetTab = tab;
-  pageContent.innerHTML = `<div class="page-heading"><h2>Crypto Assets</h2><p>Digital asset holdings and performance.</p></div>
-    <div class="card">${assetTabs()}<div class="table-wrap" id="assetTable"></div></div>`;
-  bindAssetTabs();
-  renderAssetTable(tab);
-}
-
-function renderSignals() {
-  pageContent.innerHTML = `<div class="page-heading"><h2>Smart Signals</h2><p>AI-assisted investment signals curated by your advisor.</p></div>
-    <div class="dash-ideas">${(p().smart_ideas || []).map(ideaCard).join('') || emptyBlock()}</div>`;
-}
-
-async function renderReports() { await renderDocuments(); }
-
-async function renderDocuments() {
-  const docs = await API.documents();
-  pageContent.innerHTML = `<div class="page-heading"><h2>Documents</h2><p>Reports and statements shared with you.</p></div>
-    <div class="card table-wrap"><table><thead><tr><th>Title</th><th>Type</th><th>Date</th><th></th></tr></thead><tbody>
-      ${docs.length ? docs.map(d => `<tr><td>${esc(d.title)}</td><td>${esc(d.doc_type)}</td><td>${new Date(d.created_at).toLocaleDateString()}</td><td>${d.file_url ? `<a class="btn btn-outline btn-sm" href="${esc(d.file_url)}" target="_blank" rel="noopener">Open</a>` : '—'}</td></tr>`).join('') : `<tr><td colspan="4">${emptyBlock()}</td></tr>`}
-    </tbody></table></div>`;
-}
-
-function renderAlerts() {
-  const alerts = p().alerts || [
-    { title: 'Portfolio review scheduled', date: 'May 28', type: 'info' },
-    { title: 'BTC crossed target allocation', date: 'May 26', type: 'warning' },
-  ];
-  pageContent.innerHTML = `<div class="page-heading"><h2>Alerts</h2><p>Notifications about your portfolio.</p></div>
-    <div class="card side-list">${alerts.map(a => `<div class="side-item"><strong>${esc(a.title)}</strong><small>${esc(a.date)}</small></div>`).join('')}</div>`;
-}
-
-async function renderSettings() {
-  const msgs = await API.messages();
-  pageContent.innerHTML = `
-    <div class="page-heading"><h2>Settings</h2><p>Account preferences and advisor messages.</p></div>
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-head"><h3>Profile</h3></div>
-        <div class="side-list">
-          <div class="side-item"><small>Name</small><strong>${esc(profile.full_name)}</strong></div>
-          <div class="side-item"><small>Email</small><strong>${esc(profile.email || '—')}</strong></div>
-          <div class="side-item"><small>Type</small><strong>${esc((profile.investor_type || '').replace(/_/g, ' '))}</strong></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h3>Message advisor</h3></div>
-        <div class="field"><label>Subject</label><input id="msgSubject" value="Consultation request"></div>
-        <div class="field"><label>Message</label><textarea id="msgBody"></textarea></div>
-        <button class="btn btn-primary btn-sm" id="sendMsg" type="button">Send</button>
-      </div>
-    </div>
-    <div class="card" style="margin-top:16px">${msgs.length ? msgs.map(m => `<div class="side-item"><strong>${esc(m.subject)}</strong><small>${esc(m.sender_name)} · ${new Date(m.created_at).toLocaleString()}</small><p style="margin:8px 0 0;font-size:13px">${esc(m.body)}</p></div>`).join('') : emptyBlock('No messages yet.')}</div>`;
-  document.getElementById('sendMsg').onclick = async () => {
-    await API.sendMessage(document.getElementById('msgBody').value, document.getElementById('msgSubject').value);
-    renderSettings();
-  };
-}
-
-function renderAllocationTable(allocation) {
-  if (!allocation?.length) return emptyBlock();
-  return `<table><thead><tr><th>Asset class</th><th>%</th></tr></thead><tbody>
-    ${allocation.map(a => `<tr><td>${esc(a.name)}</td><td>${a.pct}%</td></tr>`).join('')}
-  </tbody></table>`;
-}
-
-function emptyBlock(msg = 'No data available.') {
-  return `<div class="empty-state" style="padding:20px;text-align:center;color:var(--muted)">${msg}</div>`;
-}
-
-function fmtUsd(v) {
-  if (v == null || v === '') return '—';
-  if (typeof v === 'string' && v.startsWith('$')) return v;
-  return '$' + Number(v).toLocaleString();
-}
-
-function esc(s) {
-  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
 init();
-window.navigate = navigate;

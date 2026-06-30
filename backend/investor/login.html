@@ -3,24 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Investor Sign In — Twaresh Investment Consult</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/portal-assets/css/tic-theme.css">
-  <style>
-    .auth-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--bg); }
-    .auth-card { width: min(420px, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 32px; box-shadow: var(--shadow); }
-    .auth-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
-    .auth-tabs a { flex: 1; text-align: center; padding: 10px; border-radius: 10px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); }
-    .auth-tabs a.active { background: var(--primary-soft); color: var(--primary); border-color: var(--primary-border); }
-    .auth-tabs a:hover:not(.active) { background: var(--surface-2); }
-  </style>
+  <title>Investor Sign In — Twaresh Financial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
   <div class="auth-shell">
     <div class="auth-card">
-      <div class="brand-mark">T</div>
-      <h1 style="margin:0 0 8px;font-size:26px">Investor Sign In</h1>
-      <p style="margin:0 0 20px;color:var(--muted)">Access your private portfolio dashboard.</p>
+      <div class="auth-logo">T</div>
+      <h1>Investor Sign In</h1>
+      <p>Access your private wealth dashboard.</p>
       <div class="auth-tabs">
         <a href="login" class="active">Sign In</a>
         <a href="register">Register</a>
@@ -28,13 +22,13 @@
       <form id="loginForm">
         <div class="field"><label>Username</label><input id="username" required autocomplete="username"></div>
         <div class="field"><label>Password</label><input id="password" type="password" required autocomplete="current-password"></div>
-        <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+        <button class="btn-primary" type="submit">Sign in</button>
         <div class="status" id="status"></div>
       </form>
-      <p style="margin-top:14px;font-size:13px;color:var(--muted);text-align:center">
-        New investor? <a href="register" style="color:var(--primary);font-weight:600">Create an account</a>
+      <p style="margin-top:14px;font-size:13px;color:var(--text2);text-align:center">
+        New investor? <a href="register" style="color:var(--gold2);font-weight:600">Create an account</a>
       </p>
-      <p style="margin-top:12px;font-size:12px;color:var(--muted)"><a href="/" style="color:var(--primary)">← Back to public site</a></p>
+      <p style="margin-top:12px;font-size:12px;color:var(--text3);text-align:center"><a href="/" style="color:var(--gold2)">← Back to public site</a></p>
     </div>
   </div>
   <script src="js/api.js"></script>
