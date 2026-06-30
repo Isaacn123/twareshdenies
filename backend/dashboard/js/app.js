@@ -161,8 +161,12 @@ async function renderOverview() {
     API.getUsers().catch(() => []),
   ]);
   const published = sections.filter(s => s.is_published).length;
+  const hidden = Math.max(sections.length - published, 0);
   const unread = submissions.filter(s => !s.is_read).length;
   const activeInvestors = investors.filter(i => i.portal_enabled).length;
+  const inactiveInvestors = Math.max(investors.length - activeInvestors, 0);
+  const monthSeries = lastSixMonthSeries(submissions);
+  const recentCount = monthSeries.counts.reduce((sum, n) => sum + n, 0);
 
   pageContent.innerHTML = `
     <div class="dash-grid">
@@ -174,27 +178,33 @@ async function renderOverview() {
       </div>
       <div class="dash-mid">
         <div class="card">
-          <div class="card-head"><h3>Section Visibility</h3></div>
+          <div class="card-head"><h3>Content Status</h3></div>
           <div class="alloc-layout">
             <div class="chart-wrap sm"><canvas id="adminAllocChart"></canvas></div>
             <div class="legend-list">
-              <div class="legend-item"><div class="legend-left"><span class="legend-dot" style="background:#7c3aed"></span>Published</div><strong>${published}</strong></div>
-              <div class="legend-item"><div class="legend-left"><span class="legend-dot" style="background:#d1d5db"></span>Hidden</div><strong>${sections.length - published}</strong></div>
+              <div class="legend-item"><div class="legend-left"><span class="legend-dot" style="background:#f5a623"></span>Published</div><span class="legend-pct">${published}</span></div>
+              <div class="legend-item"><div class="legend-left"><span class="legend-dot" style="background:#94a3b8"></span>Hidden</div><span class="legend-pct">${hidden}</span></div>
             </div>
           </div>
         </div>
         <div class="card">
-          <div class="card-head"><h3>Submission Activity</h3><div class="perf-ytd">${submissions.length} total enquiries</div></div>
-          <div class="chart-wrap"><canvas id="adminPerfChart"></canvas></div>
+          <div class="card-head"><h3>Investor Portal</h3></div>
+          <div class="alloc-layout">
+            <div class="chart-wrap sm"><canvas id="adminInvestorChart"></canvas></div>
+            <div class="legend-list">
+              <div class="legend-item"><div class="legend-left"><span class="legend-dot" style="background:#22c55e"></span>Active</div><span class="legend-pct">${activeInvestors}</span></div>
+              <div class="legend-item"><div class="legend-left"><span class="legend-dot" style="background:#e2e8f0"></span>Disabled</div><span class="legend-pct">${inactiveInvestors}</span></div>
+            </div>
+          </div>
         </div>
         <div class="card">
-          <div class="card-head"><h3>Platform Snapshot</h3></div>
-          <div class="side-list">
-            <div class="side-item"><div class="side-item-row"><strong>Site</strong><span>${escapeHtml(siteSettings?.site_name || 'Twaresh Denis')}</span></div></div>
-            <div class="side-item"><div class="side-item-row"><strong>Investors</strong><span>${investors.length}</span></div></div>
-            <div class="side-item"><div class="side-item-row"><strong>Unread submissions</strong><span class="${unread ? 'neg' : 'pos'}">${unread}</span></div></div>
-            <div class="side-item"><div class="side-item-row"><strong>Your role</strong><span>${escapeHtml(currentUser.permissions?.role || 'Admin')}</span></div></div>
+          <div class="card-head"><h3>Submission Activity</h3></div>
+          <div class="chart-summary">
+            <span class="chart-summary-val">${submissions.length}</span>
+            <span class="chart-summary-badge">${recentCount} last 6 months</span>
           </div>
+          <div class="chart-summary-sub">Enquiries received on the public site</div>
+          <div class="chart-wrap"><canvas id="adminPerfChart"></canvas></div>
         </div>
       </div>
       <div class="dash-lower">
@@ -212,13 +222,50 @@ async function renderOverview() {
             </div>`).join('') : '<div style="color:var(--muted);padding:12px">No investors yet.</div>'}
           </div>
         </div>
+        <div class="card">
+          <div class="card-head"><h3>Platform Snapshot</h3></div>
+          <div class="side-list">
+            <div class="side-item"><div class="side-item-row"><strong>Site</strong><span>${escapeHtml(siteSettings?.site_name || 'Twaresh Denis')}</span></div></div>
+            <div class="side-item"><div class="side-item-row"><strong>Investors</strong><span>${investors.length}</span></div></div>
+            <div class="side-item"><div class="side-item-row"><strong>Unread submissions</strong><span class="${unread ? 'neg' : 'pos'}">${unread}</span></div></div>
+            <div class="side-item"><div class="side-item-row"><strong>Your role</strong><span>${escapeHtml(currentUser.permissions?.role || 'Admin')}</span></div></div>
+          </div>
+        </div>
       </div>
     </div>`;
 
-  TICCharts.donut('adminAllocChart', ['Published', 'Hidden'], [published, Math.max(sections.length - published, 0)], ['#7c3aed', '#e5e7eb'], String(published), 'live');
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-  const counts = months.map((_, i) => submissions.filter(s => new Date(s.created_at).getMonth() === i).length);
-  TICCharts.line('adminPerfChart', months, counts.length ? counts : [0, 1, 0, 2, 1, submissions.length]);
+  TICCharts.donut(
+    'adminAllocChart',
+    ['Published', 'Hidden'],
+    [published, hidden],
+    ['#f5a623', '#94a3b8'],
+    String(published),
+    'Published'
+  );
+  TICCharts.donut(
+    'adminInvestorChart',
+    ['Active', 'Disabled'],
+    [activeInvestors, inactiveInvestors],
+    ['#22c55e', '#e2e8f0'],
+    String(activeInvestors),
+    'Active'
+  );
+  TICCharts.line('adminPerfChart', monthSeries.labels, monthSeries.counts, '#3b82f6');
+}
+
+function lastSixMonthSeries(submissions) {
+  const labels = [];
+  const counts = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i -= 1) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    labels.push(d.toLocaleString(undefined, { month: 'short' }));
+    counts.push(submissions.filter(s => {
+      const created = new Date(s.created_at);
+      return created.getFullYear() === d.getFullYear() && created.getMonth() === d.getMonth();
+    }).length);
+  }
+  return { labels, counts };
 }
 
 async function renderReports() {
