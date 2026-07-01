@@ -781,6 +781,17 @@ th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: upp
 }
 
 .stack-sections { display: flex; flex-direction: column; gap: 18px; }
+.pf-section-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
 .expand-list { display: flex; flex-direction: column; gap: 10px; }
 .expand-row {
   border: 1px solid var(--line);

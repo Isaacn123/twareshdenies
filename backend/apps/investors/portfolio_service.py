@@ -24,6 +24,21 @@ CATEGORY_COLORS = {
 }
 FALLBACK_COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#f97316', '#64748b', '#ec4899', '#14b8a6']
 
+BINANCE_SYMBOL_MAP = {
+    'BTC': 'btcusdt',
+    'ETH': 'ethusdt',
+    'SOL': 'solusdt',
+    'BNB': 'bnbusdt',
+    'XRP': 'xrpusdt',
+    'ADA': 'adausdt',
+    'DOGE': 'dogeusdt',
+    'DOT': 'dotusdt',
+    'AVAX': 'avaxusdt',
+    'MATIC': 'maticusdt',
+    'LINK': 'linkusdt',
+    'LTC': 'ltcusdt',
+}
+
 
 def _dec(value, default=Decimal('0')):
     if value is None or value == '':
@@ -78,6 +93,62 @@ def _allocation_label(holding):
     if symbol:
         return f'{holding.name} ({symbol})'
     return holding.name
+
+
+def _format_market_price(holding):
+    if holding.price is not None and _dec(holding.price) > 0:
+        price = _dec(holding.price)
+        if price >= Decimal('1000'):
+            return f'${price:,.2f}'
+        return f'${price:,.2f}'
+    value = _dec(holding.value)
+    if value >= Decimal('1000'):
+        return f'${value:,.0f}'
+    return f'${value:,.2f}'
+
+
+def _holding_market_label(holding):
+    symbol = (holding.symbol or '').strip().upper()
+    name = (holding.name or symbol or 'Asset').strip()
+    if symbol and symbol not in name.upper():
+        return f'{name} ({symbol})'
+    return name
+
+
+def _binance_symbol_for_holding(holding):
+    symbol = (holding.symbol or '').strip().upper()
+    if holding.category == 'crypto' and symbol in BINANCE_SYMBOL_MAP:
+        return BINANCE_SYMBOL_MAP[symbol]
+    return ''
+
+
+def resolve_market_snapshot(market_items, holdings):
+    """Use admin market rows when present; otherwise derive from holdings."""
+    items = list(market_items)
+    if items:
+        return [
+            {
+                'name': item.name,
+                'value': item.value_display,
+                'change': float(item.change_pct),
+                'binance_symbol': item.binance_symbol,
+                'source': 'admin',
+            }
+            for item in items
+        ]
+
+    rows = []
+    for holding in sorted(holdings, key=lambda h: _dec(h.value), reverse=True):
+        if _dec(holding.value) <= 0 and (holding.price is None or _dec(holding.price) <= 0):
+            continue
+        rows.append({
+            'name': _holding_market_label(holding),
+            'value': _format_market_price(holding),
+            'change': float(holding.change_24h or 0),
+            'binance_symbol': _binance_symbol_for_holding(holding),
+            'source': 'holdings',
+        })
+    return rows[:12]
 
 
 def compute_holdings_metrics(holdings, net_worth):
@@ -190,7 +261,7 @@ def build_portfolio_payload(profile):
         })
 
     currency = getattr(profile, 'currency_setting', None)
-    market_items = profile.market_items.all()
+    market_items = list(profile.market_items.all())
     alerts = profile.alerts.all()
     otc_trades = profile.otc_trades.all()
     smart_ideas = profile.smart_ideas.all()
@@ -224,15 +295,7 @@ def build_portfolio_payload(profile):
         },
         'sparklines': {'net_worth': spark_values},
         'assets': dict(assets),
-        'market_snapshot': [
-            {
-                'name': item.name,
-                'value': item.value_display,
-                'change': float(item.change_pct),
-                'binance_symbol': item.binance_symbol,
-            }
-            for item in market_items
-        ],
+        'market_snapshot': resolve_market_snapshot(market_items, holdings),
         'alerts': [
             {'title': alert.title, 'date': alert.alert_date, 'type': alert.alert_type}
             for alert in alerts

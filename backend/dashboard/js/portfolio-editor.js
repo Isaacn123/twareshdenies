@@ -73,7 +73,7 @@ function pfMarketRow(item = {}) {
 
 function pfAssetSection(key, label, assets) {
   const rows = assets?.length ? assets.map(item => pfAssetRow(item, key)).join('') : '';
-  return `<details class="expand-row pf-asset-group" data-asset-key="${key}" ${key === 'crypto' ? 'open' : ''}>
+  return `<details class="expand-row pf-asset-group" data-asset-key="${key}">
     <summary><span>${label}</span><span class="expand-meta">${(assets || []).length} holdings</span></summary>
     <div class="expand-body">
       <div class="table-wrap">
@@ -98,46 +98,66 @@ function renderPortfolioEditor(investor = {}) {
 
   return `
     <div id="portfolioEditor" class="stack-sections" style="margin-top:18px">
-      <div class="card" style="margin:0;background:var(--surface2, rgba(255,255,255,.03))">
-        <h4 style="margin:0 0 8px;color:var(--text)">Computed preview (investor dashboard)</h4>
-        <p style="color:var(--muted);margin:0 0 14px;font-size:13px">These values are calculated from holdings and snapshots when you save.</p>
-        <div class="grid-2">
-          <div class="side-item"><small>Net worth</small><strong id="pf-preview-net-worth">${escapeHtml(computed.net_worth || '—')}</strong></div>
-          <div class="side-item"><small>Total invested</small><strong id="pf-preview-invested">${escapeHtml(computed.total_invested || '—')}</strong></div>
-          <div class="side-item"><small>Total returns</small><strong id="pf-preview-returns">${escapeHtml(computed.total_returns || '—')}</strong></div>
-          <div class="side-item"><small>Flex funds</small><strong id="pf-preview-flex">${escapeHtml(computed.flex_funds || '—')}</strong></div>
-          <div class="side-item"><small>MoM net worth</small><strong id="pf-preview-mom">${escapeHtml([computed.net_worth_change, computed.net_worth_change_pct].filter(Boolean).join(' ') || '—')}</strong></div>
-          <div class="side-item"><small>Holdings / classes</small><strong>${escapeHtml(String(computed.investments_count ?? '—'))} / ${escapeHtml(String(computed.asset_classes ?? '—'))}</strong></div>
+      <div class="pf-section-toolbar">
+        <span style="color:var(--muted);font-size:13px">Portfolio sections</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn btn-ghost btn-sm" data-pf-action="expand-all">Expand all</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-pf-action="collapse-all">Collapse all</button>
         </div>
       </div>
 
-      <div class="card" style="margin:0">
-        <h4 style="margin:0 0 14px;color:var(--text)">Capital contributed</h4>
-        ${pfField('Total invested (USD)', 'pf-total-invested', pfParseMoney(investor.total_invested), 'number', 'step="1" min="0"')}
-        <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--text)">
-          <input type="checkbox" id="pf-save-snapshot" checked>
-          Save portfolio snapshot for today (used for trends and vs last month)
-        </label>
-      </div>
+      <details class="expand-row pf-section">
+        <summary><span>Computed preview</span><span class="expand-meta">Investor dashboard KPIs</span></summary>
+        <div class="expand-body">
+          <div class="card" style="margin:0;background:var(--surface2, rgba(255,255,255,.03))">
+            <p style="color:var(--muted);margin:0 0 14px;font-size:13px">Calculated from holdings when you save.</p>
+            <div class="grid-2">
+              <div class="side-item"><small>Net worth</small><strong id="pf-preview-net-worth">${escapeHtml(computed.net_worth || '—')}</strong></div>
+              <div class="side-item"><small>Total invested</small><strong id="pf-preview-invested">${escapeHtml(computed.total_invested || '—')}</strong></div>
+              <div class="side-item"><small>Total returns</small><strong id="pf-preview-returns">${escapeHtml(computed.total_returns || '—')}</strong></div>
+              <div class="side-item"><small>Flex funds</small><strong id="pf-preview-flex">${escapeHtml(computed.flex_funds || '—')}</strong></div>
+              <div class="side-item"><small>MoM net worth</small><strong id="pf-preview-mom">${escapeHtml([computed.net_worth_change, computed.net_worth_change_pct].filter(Boolean).join(' ') || '—')}</strong></div>
+              <div class="side-item"><small>Holdings / classes</small><strong>${escapeHtml(String(computed.investments_count ?? '—'))} / ${escapeHtml(String(computed.asset_classes ?? '—'))}</strong></div>
+            </div>
+          </div>
+        </div>
+      </details>
 
-      <details class="expand-row" open>
+      <details class="expand-row pf-section">
+        <summary><span>Capital contributed</span><span class="expand-meta">${escapeHtml(String(pfParseMoney(investor.total_invested) || '0'))}</span></summary>
+        <div class="expand-body">
+          <div class="card" style="margin:0">
+            ${pfField('Total invested (USD)', 'pf-total-invested', pfParseMoney(investor.total_invested), 'number', 'step="1" min="0"')}
+            <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--text)">
+              <input type="checkbox" id="pf-save-snapshot" checked>
+              Save portfolio snapshot for today (used for trends and vs last month)
+            </label>
+          </div>
+        </div>
+      </details>
+
+      <details class="expand-row pf-section">
         <summary><span>Holdings</span><span class="expand-meta">${(investor.holdings || []).length} positions</span></summary>
         <div class="expand-body expand-list">
           ${PF_ASSET_CATEGORIES.map(({ key, label }) => pfAssetSection(key, label, grouped[key])).join('')}
         </div>
       </details>
 
-      <details class="expand-row">
-        <summary><span>Market snapshot</span><span class="expand-meta">${market.length} markets</span></summary>
+      <details class="expand-row pf-section">
+        <summary><span>Market snapshot</span><span class="expand-meta">${market.length ? `${market.length} custom` : 'Uses holdings if empty'}</span></summary>
         <div class="expand-body">
-          <p style="color:var(--muted);font-size:13px;margin:0 0 12px">Shown on the investor Overview and Markets pages. Add a <strong>Binance symbol</strong> (e.g. <code>btcusdt</code>) for live crypto prices via WebSocket; leave blank for manual indices like S&amp;P 500.</p>
+          <p style="color:var(--muted);font-size:13px;margin:0 0 12px">Optional override for the investor Markets page. If left empty, markets are <strong>auto-built from holdings</strong> (price, 24h change, Binance live for crypto). Add rows here only for extra indices like S&amp;P 500.</p>
+          <div class="page-toolbar" style="margin:0 0 12px">
+            <button type="button" class="btn btn-ghost btn-sm" data-pf-action="sync-markets-holdings">Copy from current holdings</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-pf-action="clear-markets">Clear market rows</button>
+          </div>
           <div class="table-wrap"><table><thead><tr><th>Name</th><th>Value (fallback)</th><th>Change % (fallback)</th><th>Binance symbol</th><th></th></tr></thead>
-          <tbody id="pfMarketBody">${market.map(item => pfMarketRow(item)).join('') || '<tr class="pf-empty-row"><td colspan="5" style="color:var(--muted)">No markets yet.</td></tr>'}</tbody></table></div>
-          <button type="button" class="btn btn-ghost btn-sm" data-pf-action="add-market">Add market</button>
+          <tbody id="pfMarketBody">${market.map(item => pfMarketRow(item)).join('') || '<tr class="pf-empty-row"><td colspan="5" style="color:var(--muted)">Empty — investor sees holdings as markets.</td></tr>'}</tbody></table></div>
+          <button type="button" class="btn btn-ghost btn-sm" data-pf-action="add-market">Add market row</button>
         </div>
       </details>
 
-      <details class="expand-row">
+      <details class="expand-row pf-section">
         <summary><span>Alerts</span><span class="expand-meta">${alerts.length} alerts</span></summary>
         <div class="expand-body">
           <div class="table-wrap"><table><thead><tr><th>Title</th><th>Date</th><th>Type</th><th></th></tr></thead>
@@ -146,7 +166,7 @@ function renderPortfolioEditor(investor = {}) {
         </div>
       </details>
 
-      <details class="expand-row">
+      <details class="expand-row pf-section">
         <summary><span>OTC trades</span><span class="expand-meta">${otc.length} trades</span></summary>
         <div class="expand-body">
           <div class="table-wrap"><table><thead><tr><th>Title</th><th>Side</th><th>Amount</th><th>Settlement</th><th></th></tr></thead>
@@ -155,7 +175,7 @@ function renderPortfolioEditor(investor = {}) {
         </div>
       </details>
 
-      <details class="expand-row">
+      <details class="expand-row pf-section">
         <summary><span>Smart ideas</span><span class="expand-meta">${ideas.length} ideas</span></summary>
         <div class="expand-body">
           <div class="table-wrap"><table><thead><tr><th>Title</th><th>Category</th><th>Min investment</th><th>Description</th><th></th></tr></thead>
@@ -164,8 +184,8 @@ function renderPortfolioEditor(investor = {}) {
         </div>
       </details>
 
-      <details class="expand-row">
-        <summary><span>Currency converter</span></summary>
+      <details class="expand-row pf-section">
+        <summary><span>Currency converter</span><span class="expand-meta">${escapeHtml(currency.from || 'USD')} → ${escapeHtml(currency.to || 'UGX')}</span></summary>
         <div class="expand-body grid-2">
           ${pfField('From currency', 'pf-currency-from', currency.from, 'text')}
           ${pfField('To currency', 'pf-currency-to', currency.to, 'text')}
@@ -185,6 +205,73 @@ function pfMoveRow(row, direction) {
   if (!row) return;
   if (direction === 'up' && row.previousElementSibling) row.parentElement.insertBefore(row, row.previousElementSibling);
   else if (direction === 'down' && row.nextElementSibling) row.parentElement.insertBefore(row.nextElementSibling, row);
+}
+
+const PF_BINANCE_MAP = {
+  BTC: 'btcusdt', ETH: 'ethusdt', SOL: 'solusdt', BNB: 'bnbusdt', XRP: 'xrpusdt',
+  ADA: 'adausdt', DOGE: 'dogeusdt', DOT: 'dotusdt', AVAX: 'avaxusdt', LINK: 'linkusdt', LTC: 'ltcusdt',
+};
+
+function pfBinanceSymbol(symbol, category) {
+  const key = String(symbol || '').trim().toUpperCase();
+  if (category === 'crypto' && PF_BINANCE_MAP[key]) return PF_BINANCE_MAP[key];
+  return '';
+}
+
+function pfFormatMarketPrice(price, value) {
+  const p = pfNum(price, 0);
+  const v = pfNum(value, 0);
+  const n = p > 0 ? p : v;
+  if (!n) return '';
+  return n >= 1000 ? `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function pfCollectHoldingsFromForm() {
+  const holdings = [];
+  PF_ASSET_CATEGORIES.forEach(({ key }) => {
+    const tbody = document.querySelector(`[data-asset-body="${key}"]`);
+    if (!tbody) return;
+    [...tbody.querySelectorAll('tr')].filter(r => !r.classList.contains('pf-empty-row')).forEach(row => {
+      const name = row.querySelector('.pf-asset-name')?.value.trim() ?? '';
+      const symbol = row.querySelector('.pf-asset-symbol')?.value.trim() ?? '';
+      if (!name && !symbol) return;
+      holdings.push({
+        category: key,
+        name,
+        symbol,
+        price: pfNum(row.querySelector('.pf-asset-price')?.value, 0),
+        value: pfNum(row.querySelector('.pf-asset-value')?.value, 0),
+        change_24h: pfNum(row.querySelector('.pf-asset-change')?.value, 0),
+      });
+    });
+  });
+  return holdings.sort((a, b) => (b.value || 0) - (a.value || 0));
+}
+
+function pfHoldingsToMarketRows(holdings) {
+  return holdings.filter(h => h.value > 0 || h.price > 0).map(h => {
+    const sym = String(h.symbol || '').trim().toUpperCase();
+    let label = h.name || sym || 'Asset';
+    if (sym && !label.toUpperCase().includes(sym)) label = `${h.name} (${sym})`;
+    return {
+      name: label,
+      value: pfFormatMarketPrice(h.price, h.value),
+      change: h.change_24h || 0,
+      binance_symbol: pfBinanceSymbol(sym, h.category),
+    };
+  });
+}
+
+function pfRenderMarketBody(rows) {
+  const tbody = document.getElementById('pfMarketBody');
+  if (!tbody) return;
+  tbody.innerHTML = rows.length
+    ? rows.map(item => pfMarketRow(item)).join('')
+    : '<tr class="pf-empty-row"><td colspan="5" style="color:var(--muted)">Empty — investor sees holdings as markets.</td></tr>';
+}
+
+function pfSetAllSections(open) {
+  document.querySelectorAll('#portfolioEditor details').forEach(el => { el.open = open; });
 }
 
 function pfCollectMarketRows(tbody) {
@@ -278,6 +365,22 @@ function bindPortfolioEditor() {
       const tbody = document.getElementById('pfMarketBody');
       pfClearEmptyRow(tbody);
       tbody.insertAdjacentHTML('beforeend', pfMarketRow());
+      return;
+    }
+    if (action === 'expand-all') {
+      pfSetAllSections(true);
+      return;
+    }
+    if (action === 'collapse-all') {
+      pfSetAllSections(false);
+      return;
+    }
+    if (action === 'sync-markets-holdings') {
+      pfRenderMarketBody(pfHoldingsToMarketRows(pfCollectHoldingsFromForm()));
+      return;
+    }
+    if (action === 'clear-markets') {
+      pfRenderMarketBody([]);
       return;
     }
     if (action === 'add-alert') {

@@ -103,7 +103,7 @@ window.TFMarkets = (function () {
     if (!grid) return;
     grid.innerHTML = items.length
       ? items.map((item, i) => miniCardHtml(item, i)).join('')
-      : '<div style="color:var(--text3);font-size:13px">No markets configured. Your advisor can add them in the admin dashboard.</div>';
+      : '<div style="color:var(--text3);font-size:13px">Add holdings in the admin dashboard — markets appear automatically from your portfolio positions.</div>';
   }
 
   function renderFullPage() {
@@ -112,12 +112,12 @@ window.TFMarkets = (function () {
     if (grid) {
       grid.innerHTML = items.length
         ? items.map((item, i) => fullCardHtml(item, i)).join('')
-        : '<div style="color:var(--text3);padding:20px">No markets configured yet.</div>';
+        : '<div style="color:var(--text3);padding:20px">Markets will appear from your holdings once your advisor saves portfolio positions.</div>';
     }
     if (body) {
       body.innerHTML = items.length
         ? items.map((item, i) => screenerRowHtml(item, i)).join('')
-        : '<tr><td colspan="7" style="color:var(--text3);padding:16px 0">No markets configured yet.</td></tr>';
+        : '<tr><td colspan="7" style="color:var(--text3);padding:16px 0">Markets will appear from your holdings once your advisor saves portfolio positions.</td></tr>';
     }
   }
 
