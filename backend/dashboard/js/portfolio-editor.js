@@ -22,41 +22,36 @@ function pfNum(value, fallback = 0) {
   return Number.isNaN(n) ? fallback : n;
 }
 
-function pfCsv(values) {
-  return (values || []).join(', ');
+function pfParseMoney(value) {
+  if (value == null || value === '') return 0;
+  if (typeof value === 'number') return value;
+  return pfNum(String(value).replace(/[$,+]/g, ''), 0);
 }
 
-function pfParseCsv(text, asNumber = false) {
-  return String(text || '')
-    .split(',')
-    .map(v => v.trim())
-    .filter(Boolean)
-    .map(v => (asNumber ? pfNum(v, 0) : v));
+function pfField(label, id, value, type = 'text', extra = '') {
+  return `<div class="field"><label>${label}</label><input class="table-input" id="${id}" type="${type}" value="${escapeAttr(value ?? '')}" ${extra}></div>`;
 }
 
-function pfField(label, id, value, type = 'text') {
-  return `<div class="field"><label>${label}</label><input class="table-input" id="${id}" type="${type}" value="${escapeAttr(value ?? '')}"></div>`;
+function pfGroupHoldings(holdings) {
+  const groups = Object.fromEntries(PF_ASSET_CATEGORIES.map(c => [c.key, []]));
+  (holdings || []).forEach(item => {
+    const key = groups[item.category] ? item.category : 'crypto';
+    groups[key].push(item);
+  });
+  return groups;
 }
 
-function pfAllocationRow(item = {}) {
-  return `<tr>
-    <td><input class="table-input pf-alloc-name" value="${escapeAttr(item.name || '')}" placeholder="Equities"></td>
-    <td><input class="table-input pf-alloc-pct" type="number" step="0.1" value="${item.pct ?? ''}" placeholder="40"></td>
-    <td><input class="table-input pf-alloc-color" type="color" value="${escapeAttr(item.color || '#7c3aed')}"></td>
-    <td>${pfRowActions('allocation')}</td>
-  </tr>`;
-}
-
-function pfAssetRow(item = {}) {
-  return `<tr>
+function pfAssetRow(item = {}, category = 'crypto') {
+  const isCash = category === 'cash';
+  return `<tr data-pf-category="${category}">
     <td><input class="table-input pf-asset-name" value="${escapeAttr(item.name || '')}" placeholder="Bitcoin"></td>
     <td><input class="table-input pf-asset-symbol" value="${escapeAttr(item.symbol || '')}" placeholder="BTC"></td>
     <td><input class="table-input pf-asset-price" type="number" step="0.01" value="${item.price ?? ''}"></td>
     <td><input class="table-input pf-asset-value" type="number" step="1" value="${item.value ?? ''}"></td>
-    <td><input class="table-input pf-asset-holdings" value="${escapeAttr(item.holdings || '')}" placeholder="12.5 BTC"></td>
-    <td><input class="table-input pf-asset-allocation" type="number" step="0.1" value="${item.allocation ?? ''}"></td>
+    <td><input class="table-input pf-asset-holdings" value="${escapeAttr(item.holdings || item.holdings_text || '')}" placeholder="12.5 BTC"></td>
     <td><input class="table-input pf-asset-change" type="number" step="0.01" value="${item.change_24h ?? ''}"></td>
-    <td>${pfRowActions('asset')}</td>
+    <td style="text-align:center"><input type="checkbox" class="pf-asset-flex" ${item.is_flex || isCash ? 'checked' : ''} title="Counts as flex funds"></td>
+    <td>${pfRowActions('asset', category)}</td>
   </tr>`;
 }
 
@@ -67,13 +62,13 @@ function pfSimpleRow(cells, scope, placeholders = []) {
 }
 
 function pfAssetSection(key, label, assets) {
-  const rows = assets?.length ? assets.map(pfAssetRow).join('') : '';
-  return `<details class="expand-row pf-asset-group" data-asset-key="${key}">
+  const rows = assets?.length ? assets.map(item => pfAssetRow(item, key)).join('') : '';
+  return `<details class="expand-row pf-asset-group" data-asset-key="${key}" ${key === 'crypto' ? 'open' : ''}>
     <summary><span>${label}</span><span class="expand-meta">${(assets || []).length} holdings</span></summary>
     <div class="expand-body">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Name</th><th>Symbol</th><th>Price</th><th>Value</th><th>Holdings</th><th>Alloc %</th><th>24h %</th><th></th></tr></thead>
+          <thead><tr><th>Name</th><th>Symbol</th><th>Price</th><th>Value (USD)</th><th>Holdings</th><th>24h %</th><th>Flex</th><th></th></tr></thead>
           <tbody data-asset-body="${key}">${rows || '<tr class="pf-empty-row"><td colspan="8" style="color:var(--muted)">No holdings yet.</td></tr>'}</tbody>
         </table>
       </div>
@@ -82,97 +77,78 @@ function pfAssetSection(key, label, assets) {
   </details>`;
 }
 
-function renderPortfolioEditor(portfolio = {}) {
-  const p = portfolio || {};
-  const perf = p.performance || {};
-  const currency = p.currency || {};
+function renderPortfolioEditor(investor = {}) {
+  const computed = investor.portfolio || {};
+  const grouped = pfGroupHoldings(investor.holdings || []);
+  const currency = investor.currency || {};
+  const market = investor.market_snapshot || [];
+  const alerts = investor.alerts || [];
+  const otc = investor.otc_trades || [];
+  const ideas = investor.smart_ideas || [];
+
   return `
     <div id="portfolioEditor" class="stack-sections" style="margin-top:18px">
-      <div class="card" style="margin:0">
-        <h4 style="margin:0 0 14px;color:var(--text)">Portfolio summary</h4>
+      <div class="card" style="margin:0;background:var(--surface2, rgba(255,255,255,.03))">
+        <h4 style="margin:0 0 8px;color:var(--text)">Computed preview (investor dashboard)</h4>
+        <p style="color:var(--muted);margin:0 0 14px;font-size:13px">These values are calculated from holdings and snapshots when you save.</p>
         <div class="grid-2">
-          ${pfField('Net worth', 'pf-net-worth', p.net_worth)}
-          ${pfField('Total invested', 'pf-total-invested', p.total_invested)}
-          ${pfField('Total returns', 'pf-total-returns', p.total_returns)}
-          ${pfField('AUM', 'pf-aum', p.aum)}
-          ${pfField('YTD return', 'pf-ytd-return', p.ytd_return)}
-          ${pfField('Investments count', 'pf-investments-count', p.investments_count, 'number')}
-          ${pfField('Asset classes', 'pf-asset-classes', p.asset_classes, 'number')}
-          ${pfField('Allocation center label', 'pf-allocation-center', p.allocation_center)}
-          ${pfField('Net worth change', 'pf-net-worth-change', p.net_worth_change)}
-          ${pfField('Net worth change %', 'pf-net-worth-change-pct', p.net_worth_change_pct)}
-          ${pfField('Invested change', 'pf-total-invested-change', p.total_invested_change)}
-          ${pfField('Invested change %', 'pf-total-invested-change-pct', p.total_invested_change_pct)}
-          ${pfField('Returns change', 'pf-total-returns-change', p.total_returns_change)}
-          ${pfField('Returns change %', 'pf-total-returns-change-pct', p.total_returns_change_pct)}
+          <div class="side-item"><small>Net worth</small><strong id="pf-preview-net-worth">${escapeHtml(computed.net_worth || '—')}</strong></div>
+          <div class="side-item"><small>Total invested</small><strong id="pf-preview-invested">${escapeHtml(computed.total_invested || '—')}</strong></div>
+          <div class="side-item"><small>Total returns</small><strong id="pf-preview-returns">${escapeHtml(computed.total_returns || '—')}</strong></div>
+          <div class="side-item"><small>Flex funds</small><strong id="pf-preview-flex">${escapeHtml(computed.flex_funds || '—')}</strong></div>
+          <div class="side-item"><small>MoM net worth</small><strong id="pf-preview-mom">${escapeHtml([computed.net_worth_change, computed.net_worth_change_pct].filter(Boolean).join(' ') || '—')}</strong></div>
+          <div class="side-item"><small>Holdings / classes</small><strong>${escapeHtml(String(computed.investments_count ?? '—'))} / ${escapeHtml(String(computed.asset_classes ?? '—'))}</strong></div>
         </div>
       </div>
 
+      <div class="card" style="margin:0">
+        <h4 style="margin:0 0 14px;color:var(--text)">Capital contributed</h4>
+        ${pfField('Total invested (USD)', 'pf-total-invested', pfParseMoney(investor.total_invested), 'number', 'step="1" min="0"')}
+        <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--text)">
+          <input type="checkbox" id="pf-save-snapshot" checked>
+          Save portfolio snapshot for today (used for trends and vs last month)
+        </label>
+      </div>
+
       <details class="expand-row" open>
-        <summary><span>Asset allocation</span><span class="expand-meta">${(p.allocation || []).length} slices</span></summary>
-        <div class="expand-body">
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Name</th><th>%</th><th>Color</th><th></th></tr></thead>
-              <tbody id="pfAllocationBody">${(p.allocation || []).length
-                ? p.allocation.map(pfAllocationRow).join('')
-                : '<tr class="pf-empty-row"><td colspan="4" style="color:var(--muted)">No allocation slices yet.</td></tr>'}</tbody>
-            </table>
-          </div>
-          <button type="button" class="btn btn-ghost btn-sm" data-pf-action="add-allocation">Add allocation slice</button>
-        </div>
-      </details>
-
-      <details class="expand-row">
-        <summary><span>Performance chart</span></summary>
-        <div class="expand-body grid-2">
-          ${pfField('Total returns label', 'pf-perf-returns', perf.total_returns || p.total_returns)}
-          ${pfField('YTD %', 'pf-perf-ytd', perf.ytd_pct || p.ytd_return)}
-          <div class="field" style="grid-column:1/-1"><label>Chart labels (comma-separated)</label><input class="table-input" id="pf-perf-labels" value="${escapeAttr(pfCsv(perf.labels))}" placeholder="Jan, Feb, Mar, Apr, May, Jun"></div>
-          <div class="field" style="grid-column:1/-1"><label>Chart values (comma-separated)</label><input class="table-input" id="pf-perf-values" value="${escapeAttr(pfCsv(perf.values))}" placeholder="620000, 640000, 655000"></div>
-          <div class="field" style="grid-column:1/-1"><label>Net worth sparkline (comma-separated)</label><input class="table-input" id="pf-spark-net-worth" value="${escapeAttr(pfCsv(p.sparklines?.net_worth))}"></div>
-        </div>
-      </details>
-
-      <details class="expand-row">
-        <summary><span>Holdings by asset class</span></summary>
+        <summary><span>Holdings</span><span class="expand-meta">${(investor.holdings || []).length} positions</span></summary>
         <div class="expand-body expand-list">
-          ${PF_ASSET_CATEGORIES.map(({ key, label }) => pfAssetSection(key, label, p.assets?.[key])).join('')}
+          ${PF_ASSET_CATEGORIES.map(({ key, label }) => pfAssetSection(key, label, grouped[key])).join('')}
         </div>
       </details>
 
       <details class="expand-row">
-        <summary><span>Market snapshot</span><span class="expand-meta">${(p.market_snapshot || []).length} markets</span></summary>
+        <summary><span>Market snapshot</span><span class="expand-meta">${market.length} markets</span></summary>
         <div class="expand-body">
           <div class="table-wrap"><table><thead><tr><th>Name</th><th>Value</th><th>Change %</th><th></th></tr></thead>
-          <tbody id="pfMarketBody">${(p.market_snapshot || []).map(item => pfSimpleRow([item.name, item.value, item.change], 'market', ['S&P 500', '5,284', '0.42'])).join('') || '<tr class="pf-empty-row"><td colspan="4" style="color:var(--muted)">No markets yet.</td></tr>'}</tbody></table></div>
+          <tbody id="pfMarketBody">${market.map(item => pfSimpleRow([item.name, item.value, item.change], 'market', ['S&P 500', '5,284', '0.42'])).join('') || '<tr class="pf-empty-row"><td colspan="4" style="color:var(--muted)">No markets yet.</td></tr>'}</tbody></table></div>
           <button type="button" class="btn btn-ghost btn-sm" data-pf-action="add-market">Add market</button>
         </div>
       </details>
 
       <details class="expand-row">
-        <summary><span>Alerts</span><span class="expand-meta">${(p.alerts || []).length} alerts</span></summary>
+        <summary><span>Alerts</span><span class="expand-meta">${alerts.length} alerts</span></summary>
         <div class="expand-body">
           <div class="table-wrap"><table><thead><tr><th>Title</th><th>Date</th><th>Type</th><th></th></tr></thead>
-          <tbody id="pfAlertsBody">${(p.alerts || []).map(item => pfSimpleRow([item.title, item.date, item.type], 'alert', ['Portfolio review', 'Today', 'info'])).join('') || '<tr class="pf-empty-row"><td colspan="4" style="color:var(--muted)">No alerts yet.</td></tr>'}</tbody></table></div>
+          <tbody id="pfAlertsBody">${alerts.map(item => pfSimpleRow([item.title, item.date, item.type], 'alert', ['Portfolio review', 'Today', 'info'])).join('') || '<tr class="pf-empty-row"><td colspan="4" style="color:var(--muted)">No alerts yet.</td></tr>'}</tbody></table></div>
           <button type="button" class="btn btn-ghost btn-sm" data-pf-action="add-alert">Add alert</button>
         </div>
       </details>
 
       <details class="expand-row">
-        <summary><span>OTC trades</span><span class="expand-meta">${(p.otc_trades || []).length} trades</span></summary>
+        <summary><span>OTC trades</span><span class="expand-meta">${otc.length} trades</span></summary>
         <div class="expand-body">
           <div class="table-wrap"><table><thead><tr><th>Title</th><th>Side</th><th>Amount</th><th>Settlement</th><th></th></tr></thead>
-          <tbody id="pfOtcBody">${(p.otc_trades || []).map(item => pfSimpleRow([item.title, item.side, item.amount, item.settlement], 'otc', ['Block trade', 'Buy', '$450,000', 'May 18'])).join('') || '<tr class="pf-empty-row"><td colspan="5" style="color:var(--muted)">No trades yet.</td></tr>'}</tbody></table></div>
+          <tbody id="pfOtcBody">${otc.map(item => pfSimpleRow([item.title, item.side, item.amount, item.settlement], 'otc', ['Block trade', 'Buy', '$450,000', 'May 18'])).join('') || '<tr class="pf-empty-row"><td colspan="5" style="color:var(--muted)">No trades yet.</td></tr>'}</tbody></table></div>
           <button type="button" class="btn btn-ghost btn-sm" data-pf-action="add-otc">Add trade</button>
         </div>
       </details>
 
       <details class="expand-row">
-        <summary><span>Smart ideas</span><span class="expand-meta">${(p.smart_ideas || []).length} ideas</span></summary>
+        <summary><span>Smart ideas</span><span class="expand-meta">${ideas.length} ideas</span></summary>
         <div class="expand-body">
           <div class="table-wrap"><table><thead><tr><th>Title</th><th>Category</th><th>Min investment</th><th>Description</th><th></th></tr></thead>
-          <tbody id="pfIdeasBody">${(p.smart_ideas || []).map(item => pfSimpleRow([item.title, item.category, item.min_investment, item.description], 'idea', ['AI Leaders', 'Equity', '$50,000', 'Short summary'])).join('') || '<tr class="pf-empty-row"><td colspan="5" style="color:var(--muted)">No ideas yet.</td></tr>'}</tbody></table></div>
+          <tbody id="pfIdeasBody">${ideas.map(item => pfSimpleRow([item.title, item.category, item.min_investment, item.description], 'idea', ['AI Leaders', 'Equity', '$50,000', 'Short summary'])).join('') || '<tr class="pf-empty-row"><td colspan="5" style="color:var(--muted)">No ideas yet.</td></tr>'}</tbody></table></div>
           <button type="button" class="btn btn-ghost btn-sm" data-pf-action="add-idea">Add idea</button>
         </div>
       </details>
@@ -201,6 +177,7 @@ function pfMoveRow(row, direction) {
 }
 
 function pfCollectSimpleRows(tbody, scope, cols) {
+  if (!tbody) return [];
   return [...tbody.querySelectorAll('tr')].filter(row => !row.classList.contains('pf-empty-row')).map(row => {
     const inputs = [...row.querySelectorAll(`.pf-${scope}-cell`)];
     const item = {};
@@ -212,73 +189,47 @@ function pfCollectSimpleRows(tbody, scope, cols) {
   }).filter(item => Object.values(item).some(v => v !== '' && v !== 0));
 }
 
-function collectPortfolioFromForm(original = {}) {
+function collectPortfolioFromForm() {
   const val = id => document.getElementById(id)?.value.trim() ?? '';
-  const portfolio = { ...original };
+  const holdings = [];
 
-  portfolio.net_worth = val('pf-net-worth');
-  portfolio.total_invested = val('pf-total-invested');
-  portfolio.total_returns = val('pf-total-returns');
-  portfolio.aum = val('pf-aum') || val('pf-net-worth');
-  portfolio.ytd_return = val('pf-ytd-return');
-  portfolio.investments_count = pfNum(val('pf-investments-count'), 0);
-  portfolio.asset_classes = pfNum(val('pf-asset-classes'), 0);
-  portfolio.allocation_center = val('pf-allocation-center');
-  portfolio.net_worth_change = val('pf-net-worth-change');
-  portfolio.net_worth_change_pct = val('pf-net-worth-change-pct');
-  portfolio.total_invested_change = val('pf-total-invested-change');
-  portfolio.total_invested_change_pct = val('pf-total-invested-change-pct');
-  portfolio.total_returns_change = val('pf-total-returns-change');
-  portfolio.total_returns_change_pct = val('pf-total-returns-change-pct');
-
-  portfolio.allocation = [...document.querySelectorAll('#pfAllocationBody tr')].filter(r => !r.classList.contains('pf-empty-row')).map(row => ({
-    name: row.querySelector('.pf-alloc-name').value.trim(),
-    pct: pfNum(row.querySelector('.pf-alloc-pct').value, 0),
-    color: row.querySelector('.pf-alloc-color').value,
-  })).filter(item => item.name || item.pct);
-
-  portfolio.performance = {
-    ...(original.performance || {}),
-    total_returns: val('pf-perf-returns'),
-    ytd_pct: val('pf-perf-ytd'),
-    labels: pfParseCsv(val('pf-perf-labels')),
-    values: pfParseCsv(val('pf-perf-values'), true),
-  };
-
-  const spark = pfParseCsv(val('pf-spark-net-worth'), true);
-  portfolio.sparklines = spark.length ? { ...(original.sparklines || {}), net_worth: spark } : (original.sparklines || {});
-
-  portfolio.assets = {};
   PF_ASSET_CATEGORIES.forEach(({ key }) => {
     const tbody = document.querySelector(`[data-asset-body="${key}"]`);
-    portfolio.assets[key] = tbody
-      ? [...tbody.querySelectorAll('tr')].filter(r => !r.classList.contains('pf-empty-row')).map(row => ({
-        name: row.querySelector('.pf-asset-name').value.trim(),
-        symbol: row.querySelector('.pf-asset-symbol').value.trim(),
-        price: pfNum(row.querySelector('.pf-asset-price').value, 0),
-        value: pfNum(row.querySelector('.pf-asset-value').value, 0),
-        holdings: row.querySelector('.pf-asset-holdings').value.trim(),
-        allocation: pfNum(row.querySelector('.pf-asset-allocation').value, 0),
-        change_24h: pfNum(row.querySelector('.pf-asset-change').value, 0),
-      })).filter(item => item.name || item.symbol)
-      : (original.assets?.[key] || []);
+    if (!tbody) return;
+    [...tbody.querySelectorAll('tr')].filter(r => !r.classList.contains('pf-empty-row')).forEach((row, index) => {
+      const name = row.querySelector('.pf-asset-name')?.value.trim() ?? '';
+      const symbol = row.querySelector('.pf-asset-symbol')?.value.trim() ?? '';
+      if (!name && !symbol) return;
+      holdings.push({
+        category: key,
+        name,
+        symbol,
+        price: pfNum(row.querySelector('.pf-asset-price')?.value, 0),
+        value: pfNum(row.querySelector('.pf-asset-value')?.value, 0),
+        holdings: row.querySelector('.pf-asset-holdings')?.value.trim() ?? '',
+        change_24h: pfNum(row.querySelector('.pf-asset-change')?.value, 0),
+        is_flex: row.querySelector('.pf-asset-flex')?.checked || key === 'cash',
+        sort_order: index,
+      });
+    });
   });
 
-  portfolio.market_snapshot = pfCollectSimpleRows(document.getElementById('pfMarketBody'), 'market', ['name', 'value', 'change']);
-  portfolio.alerts = pfCollectSimpleRows(document.getElementById('pfAlertsBody'), 'alert', ['title', 'date', 'type']);
-  portfolio.otc_trades = pfCollectSimpleRows(document.getElementById('pfOtcBody'), 'otc', ['title', 'side', 'amount', 'settlement']);
-  portfolio.smart_ideas = pfCollectSimpleRows(document.getElementById('pfIdeasBody'), 'idea', ['title', 'category', 'min_investment', 'description']);
-
-  portfolio.currency = {
-    ...(original.currency || {}),
-    from: val('pf-currency-from'),
-    to: val('pf-currency-to'),
-    rate: val('pf-currency-rate'),
-    from_amount: pfNum(val('pf-currency-from-amount'), 0),
-    to_amount: pfNum(val('pf-currency-to-amount'), 0),
+  return {
+    total_invested: pfNum(val('pf-total-invested'), 0),
+    holdings,
+    market_snapshot: pfCollectSimpleRows(document.getElementById('pfMarketBody'), 'market', ['name', 'value', 'change']),
+    alerts: pfCollectSimpleRows(document.getElementById('pfAlertsBody'), 'alert', ['title', 'date', 'type']),
+    otc_trades: pfCollectSimpleRows(document.getElementById('pfOtcBody'), 'otc', ['title', 'side', 'amount', 'settlement']),
+    smart_ideas: pfCollectSimpleRows(document.getElementById('pfIdeasBody'), 'idea', ['title', 'category', 'min_investment', 'description']),
+    currency: {
+      from: val('pf-currency-from'),
+      to: val('pf-currency-to'),
+      rate: val('pf-currency-rate'),
+      from_amount: pfNum(val('pf-currency-from-amount'), 0),
+      to_amount: pfNum(val('pf-currency-to-amount'), 0),
+    },
+    save_snapshot: document.getElementById('pf-save-snapshot')?.checked !== false,
   };
-
-  return portfolio;
 }
 
 function bindPortfolioEditor() {
@@ -291,19 +242,12 @@ function bindPortfolioEditor() {
     if (!btn) return;
     e.preventDefault();
     const action = btn.dataset.pfAction;
-    const scope = btn.dataset.pfScope;
     const category = btn.dataset.pfCategory;
 
-    if (action === 'add-allocation') {
-      const tbody = document.getElementById('pfAllocationBody');
-      pfClearEmptyRow(tbody);
-      tbody.insertAdjacentHTML('beforeend', pfAllocationRow());
-      return;
-    }
     if (action === 'add-asset') {
       const tbody = document.querySelector(`[data-asset-body="${category}"]`);
       pfClearEmptyRow(tbody);
-      tbody.insertAdjacentHTML('beforeend', pfAssetRow());
+      tbody.insertAdjacentHTML('beforeend', pfAssetRow({}, category));
       return;
     }
     if (action === 'add-market') {

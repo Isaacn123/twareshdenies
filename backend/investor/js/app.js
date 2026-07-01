@@ -53,9 +53,28 @@ function formatValue(value) {
 function setChangeEl(el, changeText, pctText) {
   if (!el) return;
   const parts = [changeText, pctText].filter(Boolean);
-  el.innerHTML = parts.length
-    ? `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg> ${esc(parts.join(' '))} vs last month`
-    : '';
+  if (!parts.length) {
+    el.innerHTML = '';
+    el.className = 'kpi-change';
+    return;
+  }
+  const negative = String(changeText || pctText).trim().startsWith('-');
+  el.className = 'kpi-change ' + (negative ? 'down' : 'up');
+  el.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="${negative ? 'M7 10l5 5 5-5' : 'M7 14l5-5 5 5'}z"/></svg> ${esc(parts.join(' '))} vs last month`;
+}
+
+function renderSparkline(svgId, values, stroke) {
+  const svg = document.getElementById(svgId);
+  if (!svg || !values?.length) return;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const points = values.map((v, i) => {
+    const x = values.length === 1 ? 40 : (i / (values.length - 1)) * 80;
+    const y = 38 - ((v - min) / range) * 32;
+    return `${x},${y}`;
+  }).join(' ');
+  svg.innerHTML = `<polyline points="${points}" fill="none" stroke="${stroke}" stroke-width="2"/>`;
 }
 
 function showPage(id) {
@@ -171,9 +190,15 @@ function applyPortfolioData() {
   setText('kpiNetWorth', portfolio.net_worth);
   setText('kpiInvested', portfolio.total_invested);
   setText('kpiReturns', portfolio.total_returns);
+  setText('kpiFlex', portfolio.flex_funds || portfolio.available_funds);
   setChangeEl(document.getElementById('kpiNetWorthChange'), portfolio.net_worth_change, portfolio.net_worth_change_pct);
   setChangeEl(document.getElementById('kpiInvestedChange'), portfolio.total_invested_change, portfolio.total_invested_change_pct);
   setChangeEl(document.getElementById('kpiReturnsChange'), portfolio.total_returns_change, portfolio.total_returns_change_pct);
+
+  const spark = portfolio.sparklines?.net_worth || [];
+  renderSparkline('kpiNetWorthSpark', spark, '#3b82f6');
+  renderSparkline('kpiInvestedSpark', spark, '#22c55e');
+  renderSparkline('kpiReturnsSpark', portfolio.performance?.values || spark, '#8b5cf6');
 
   setText('perfVal', portfolio.performance?.total_returns || portfolio.total_returns);
   setText('perfBadge', portfolio.performance?.ytd_pct || portfolio.ytd_return || '—');

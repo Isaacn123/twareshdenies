@@ -75,12 +75,16 @@ def investor_me(request):
     profile = get_investor_profile(request.user)
     if not profile or not profile.portal_enabled:
         return Response({'error': 'Investor portal access disabled.'}, status=status.HTTP_403_FORBIDDEN)
+    profile = InvestorProfile.objects.select_related('currency_setting').prefetch_related(
+        'holdings', 'snapshots', 'market_items', 'alerts', 'otc_trades', 'smart_ideas'
+    ).get(pk=profile.pk)
+    from .portfolio_service import build_portfolio_payload
     log_activity(profile, 'portal_view', 'Dashboard overview', request)
     return Response({
         'full_name': profile.full_name,
         'email': request.user.email,
         'investor_type': profile.investor_type,
-        'portfolio': profile.portfolio,
+        'portfolio': build_portfolio_payload(profile),
     })
 
 
@@ -116,7 +120,9 @@ def investor_messages(request):
 
 
 class AdminInvestorViewSet(viewsets.ModelViewSet):
-    queryset = InvestorProfile.objects.select_related('user').prefetch_related('documents', 'activities').all()
+    queryset = InvestorProfile.objects.select_related('user', 'currency_setting').prefetch_related(
+        'documents', 'activities', 'holdings', 'snapshots', 'market_items', 'alerts', 'otc_trades', 'smart_ideas'
+    ).all()
     serializer_class = InvestorProfileSerializer
     permission_classes = [CanManageInvestors]
 

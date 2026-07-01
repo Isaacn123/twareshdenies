@@ -16,7 +16,7 @@ class InvestorProfile(models.Model):
     phone = models.CharField(max_length=40, blank=True)
     investor_type = models.CharField(max_length=40, choices=INVESTOR_TYPES, default='hnwi')
     portal_enabled = models.BooleanField(default=True)
-    portfolio = models.JSONField(default=dict, blank=True)
+    total_invested = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     admin_notes = models.TextField(blank=True)
     managed_by = models.ForeignKey(
         'auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_investors'
@@ -29,6 +29,103 @@ class InvestorProfile(models.Model):
 
     def __str__(self):
         return self.full_name
+
+
+class InvestorHolding(models.Model):
+    CATEGORY_CHOICES = [
+        ('crypto', 'Crypto'),
+        ('stocks', 'Stocks'),
+        ('bonds', 'Bonds'),
+        ('commodities', 'Commodities'),
+        ('real_estate', 'Real Estate'),
+        ('cash', 'Cash'),
+    ]
+
+    investor = models.ForeignKey(InvestorProfile, on_delete=models.CASCADE, related_name='holdings')
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='crypto')
+    name = models.CharField(max_length=120)
+    symbol = models.CharField(max_length=20, blank=True)
+    holdings_text = models.CharField(max_length=80, blank=True)
+    quantity = models.DecimalField(max_digits=18, decimal_places=8, null=True, blank=True)
+    value = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    price = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    change_24h = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    is_flex = models.BooleanField(default=False, help_text='Counts toward available flex funds')
+    sort_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+
+class PortfolioSnapshot(models.Model):
+    investor = models.ForeignKey(InvestorProfile, on_delete=models.CASCADE, related_name='snapshots')
+    as_of_date = models.DateField()
+    net_worth = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    total_invested = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    total_returns = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    flex_funds = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-as_of_date', '-id']
+        unique_together = [['investor', 'as_of_date']]
+
+
+class InvestorMarketItem(models.Model):
+    investor = models.ForeignKey(InvestorProfile, on_delete=models.CASCADE, related_name='market_items')
+    name = models.CharField(max_length=80)
+    value_display = models.CharField(max_length=40)
+    change_pct = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+
+class InvestorAlert(models.Model):
+    investor = models.ForeignKey(InvestorProfile, on_delete=models.CASCADE, related_name='alerts')
+    title = models.CharField(max_length=200)
+    alert_date = models.CharField(max_length=40, blank=True)
+    alert_type = models.CharField(max_length=30, default='info')
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+
+class InvestorOtcTrade(models.Model):
+    investor = models.ForeignKey(InvestorProfile, on_delete=models.CASCADE, related_name='otc_trades')
+    title = models.CharField(max_length=200)
+    side = models.CharField(max_length=20, blank=True)
+    amount_display = models.CharField(max_length=40, blank=True)
+    settlement = models.CharField(max_length=40, blank=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+
+class InvestorSmartIdea(models.Model):
+    investor = models.ForeignKey(InvestorProfile, on_delete=models.CASCADE, related_name='smart_ideas')
+    title = models.CharField(max_length=200)
+    category = models.CharField(max_length=60, blank=True)
+    min_investment = models.CharField(max_length=40, blank=True)
+    description = models.TextField(blank=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+
+class InvestorCurrencySetting(models.Model):
+    investor = models.OneToOneField(InvestorProfile, on_delete=models.CASCADE, related_name='currency_setting')
+    from_currency = models.CharField(max_length=10, default='USD')
+    to_currency = models.CharField(max_length=10, default='UGX')
+    rate_label = models.CharField(max_length=80, blank=True)
+    from_amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    to_amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
 
 
 class InvestorDocument(models.Model):

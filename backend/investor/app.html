@@ -144,12 +144,9 @@
           <svg viewBox="0 0 24 24" fill="#3b82f6"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
         </div>
         <div class="kpi-label">Total Net Worth</div>
-        <div class="kpi-value" id="kpiNetWorth">$2,989,470</div>
-        <div class="kpi-change up" id="kpiNetWorthChange">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg>
-          +$245,780 (8.95%) vs last month
-        </div>
-        <svg class="kpi-sparkline" width="80" height="40" viewBox="0 0 80 40"><polyline points="0,35 15,28 30,22 45,18 60,12 80,5" fill="none" stroke="#3b82f6" stroke-width="2"/></svg>
+        <div class="kpi-value" id="kpiNetWorth">—</div>
+        <div class="kpi-change up" id="kpiNetWorthChange"></div>
+        <svg class="kpi-sparkline" id="kpiNetWorthSpark" width="80" height="40" viewBox="0 0 80 40"></svg>
       </div>
 
       <div class="kpi-card">
@@ -157,12 +154,9 @@
           <svg viewBox="0 0 24 24" fill="#22c55e"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/></svg>
         </div>
         <div class="kpi-label">Total Invested</div>
-        <div class="kpi-value" id="kpiInvested">$2,250,000</div>
-        <div class="kpi-change up" id="kpiInvestedChange">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg>
-          +$180,450 (8.69%) vs last month
-        </div>
-        <svg class="kpi-sparkline" width="80" height="40" viewBox="0 0 80 40"><polyline points="0,38 20,30 40,20 60,14 80,7" fill="none" stroke="#22c55e" stroke-width="2"/></svg>
+        <div class="kpi-value" id="kpiInvested">—</div>
+        <div class="kpi-change up" id="kpiInvestedChange"></div>
+        <svg class="kpi-sparkline" id="kpiInvestedSpark" width="80" height="40" viewBox="0 0 80 40"></svg>
       </div>
 
       <div class="kpi-card">
@@ -170,12 +164,9 @@
           <svg viewBox="0 0 24 24" fill="#8b5cf6"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
         </div>
         <div class="kpi-label">Total Returns</div>
-        <div class="kpi-value" id="kpiReturns">$739,470</div>
-        <div class="kpi-change up" id="kpiReturnsChange">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg>
-          +$65,330 (9.69%) vs last month
-        </div>
-        <svg class="kpi-sparkline" width="80" height="40" viewBox="0 0 80 40"><polyline points="0,36 15,29 30,24 45,16 60,10 80,4" fill="none" stroke="#8b5cf6" stroke-width="2"/></svg>
+        <div class="kpi-value" id="kpiReturns">—</div>
+        <div class="kpi-change up" id="kpiReturnsChange"></div>
+        <svg class="kpi-sparkline" id="kpiReturnsSpark" width="80" height="40" viewBox="0 0 80 40"></svg>
       </div>
 
       <div class="kpi-card">
@@ -183,8 +174,8 @@
           <svg viewBox="0 0 24 24" fill="#f5a623"><path d="M4 6h16v2H4zm2-4h12v2H6zm14 8H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm-2.5 7.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
         </div>
         <div class="kpi-label">Available (Flex) Funds</div>
-        <div class="kpi-value">$239,470</div>
-        <div class="kpi-ready">✦ Ready to invest</div>
+        <div class="kpi-value" id="kpiFlex">—</div>
+        <div class="kpi-ready" id="kpiFlexReady">✦ Ready to invest</div>
       </div>
     </div>
 
@@ -207,18 +198,11 @@
               <div class="donut-container">
                 <canvas id="donutChart"></canvas>
                 <div class="donut-center">
-                  <div class="donut-pct" id="donutPct">72.4%</div>
-                  <div class="donut-label" id="donutLabel">Bitcoin (BTC)</div>
+                  <div class="donut-pct" id="donutPct">—</div>
+                  <div class="donut-label" id="donutLabel">Allocation</div>
                 </div>
               </div>
-              <div class="allocation-legend" id="allocationLegend">
-                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#f59e0b"></div><span class="legend-name">Bitcoin (BTC)</span></div><span class="legend-pct">72.4%</span></div>
-                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#3b82f6"></div><span class="legend-name">Ethereum (ETH)</span></div><span class="legend-pct">12.6%</span></div>
-                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#10b981"></div><span class="legend-name">Solana (SOL)</span></div><span class="legend-pct">6.8%</span></div>
-                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#8b5cf6"></div><span class="legend-name">US Equities</span></div><span class="legend-pct">4.1%</span></div>
-                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#f97316"></div><span class="legend-name">Gold (XAU)</span></div><span class="legend-pct">2.1%</span></div>
-                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#94a3b8"></div><span class="legend-name">Cash &amp; Others</span></div><span class="legend-pct">2.0%</span></div>
-              </div>
+              <div class="allocation-legend" id="allocationLegend"></div>
             </div>
           </div>
 
@@ -229,8 +213,8 @@
               <span class="widget-link" data-page="portfolio">View performance →</span>
             </div>
             <div>
-              <span class="perf-val" id="perfVal">$739,470</span>
-              <span class="perf-badge" id="perfBadge">+9.69% YTD</span>
+              <span class="perf-val" id="perfVal">—</span>
+              <span class="perf-badge" id="perfBadge">—</span>
             </div>
             <div class="perf-sub">Total Returns</div>
             <div class="chart-container"><canvas id="perfChart"></canvas></div>
@@ -294,7 +278,7 @@
               <div class="summary-icon blue"><svg viewBox="0 0 24 24" fill="#3b82f6"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
               <span class="summary-label">Total Invested</span>
             </div>
-            <span class="summary-amount" id="summaryInvested">$2,250,000</span>
+            <span class="summary-amount" id="summaryInvested">—</span>
           </div>
           <div class="summary-row">
             <div class="summary-left">
@@ -308,14 +292,14 @@
               <div class="summary-icon purple"><svg viewBox="0 0 24 24" fill="#8b5cf6"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/></svg></div>
               <span class="summary-label">Total Net Worth</span>
             </div>
-            <span class="summary-amount" id="summaryNetWorth">$2,989,470</span>
+            <span class="summary-amount" id="summaryNetWorth">—</span>
           </div>
           <div class="summary-row">
             <div class="summary-left">
               <div class="summary-icon gold"><svg viewBox="0 0 24 24" fill="#f5a623"><path d="M4 6h16v2H4zm2-4h12v2H6zm14 8H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm-2.5 7.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></div>
               <span class="summary-label">Available (Flex) Funds</span>
             </div>
-            <span class="summary-amount" id="summaryFlex">$239,470</span>
+            <span class="summary-amount" id="summaryFlex">—</span>
           </div>
         </div>
 
@@ -341,9 +325,9 @@
   <div id="page-portfolio" class="page">
     <div class="page-heading"><div class="section-title">Portfolio</div><div class="section-sub">Full breakdown of your holdings and performance</div></div>
     <div class="port-stats">
-      <div class="port-stat"><div class="port-stat-label">Total Portfolio Value</div><div class="port-stat-val" id="portStatValue">$2,989,470</div><div class="port-stat-change">▲ +8.95% this month</div></div>
-      <div class="port-stat"><div class="port-stat-label">Unrealised Gains</div><div class="port-stat-val" id="portStatGains">$739,470</div><div class="port-stat-change">▲ +32.9% total return</div></div>
-      <div class="port-stat"><div class="port-stat-label">Flex Cash Available</div><div class="port-stat-val" id="portStatFlex">$239,470</div><div class="port-stat-change gold-clr">Ready to deploy</div></div>
+      <div class="port-stat"><div class="port-stat-label">Total Portfolio Value</div><div class="port-stat-val" id="portStatValue">—</div><div class="port-stat-change" id="portStatValueChange"></div></div>
+      <div class="port-stat"><div class="port-stat-label">Unrealised Gains</div><div class="port-stat-val" id="portStatGains">—</div><div class="port-stat-change" id="portStatGainsChange"></div></div>
+      <div class="port-stat"><div class="port-stat-label">Flex Cash Available</div><div class="port-stat-val" id="portStatFlex">—</div><div class="port-stat-change gold-clr">Ready to deploy</div></div>
     </div>
     <div class="widget">
       <div class="widget-header"><span class="widget-title">Complete Holdings</span></div>

@@ -521,7 +521,7 @@ async function renderInvestors() {
               <td>${escapeHtml(inv.user?.username || inv.username || '-')}</td>
               <td>${escapeHtml(inv.investor_type)}</td>
               <td>${inv.portal_enabled ? '<span class="tag">Active</span>' : '<span class="tag muted">Disabled</span>'}</td>
-              <td>${escapeHtml(inv.portfolio?.aum || '—')}</td>
+              <td>${escapeHtml(inv.portfolio?.net_worth || inv.portfolio?.aum || '—')}</td>
               <td>
                 <button class="btn btn-ghost manage-investor" data-id="${inv.id}" type="button">Manage</button>
               </td>
@@ -541,7 +541,10 @@ async function openInvestorEditor(investor, allInvestors) {
   const editor = document.getElementById('investorEditor');
   editor.classList.remove('hidden');
   CKE.destroyIn(editor);
-  const p = investor?.portfolio || {};
+  if (investor?.id && !investor.holdings) {
+    const fresh = (await API.getInvestors()).find(i => i.id === investor.id);
+    if (fresh) investor = fresh;
+  }
   editor.innerHTML = `
     <h3 style="margin-top:0">${investor ? 'Manage investor' : 'New investor'}</h3>
     <div class="grid-2">
@@ -557,7 +560,7 @@ async function openInvestorEditor(investor, allInvestors) {
         </select>
       </div>
     </div>
-    ${renderPortfolioEditor(p)}
+    ${renderPortfolioEditor(investor || {})}
     <div class="field-richtext"><label>Admin notes</label><textarea id="inv-notes" data-ckeditor>${richTextareaValue(investor?.admin_notes || '')}</textarea></div>
     <div class="field"><label>Document title</label><input id="doc-title" placeholder="Q1 Performance Report"></div>
     <div class="field-richtext"><label>Document description</label><textarea id="doc-description" data-ckeditor placeholder="Optional summary shown in the investor portal"></textarea></div>
@@ -571,12 +574,13 @@ async function openInvestorEditor(investor, allInvestors) {
   bindPortfolioEditor();
 
   document.getElementById('saveInvestorBtn').onclick = async () => {
-    const portfolio = collectPortfolioFromForm(p);
+    const portfolio = collectPortfolioFromForm();
     const payload = {
       full_name: document.getElementById('inv-name').value.trim(),
       email: document.getElementById('inv-email').value.trim(),
       phone: document.getElementById('inv-phone').value.trim(),
       investor_type: document.getElementById('inv-type').value,
+      total_invested: portfolio.total_invested,
       portfolio,
       admin_notes: CKE.getValue(document.getElementById('inv-notes')),
     };
