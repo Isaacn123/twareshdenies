@@ -18,7 +18,7 @@ SECTION_CONTENT = {
     },
     'ticker': {
         'label': 'Live Markets',
-        'note': 'Market data: CoinGecko · ~60s refresh · Informational only',
+        'note': 'Market data: Binance · Live · Informational only',
     },
     'strip': {
         'items': [
