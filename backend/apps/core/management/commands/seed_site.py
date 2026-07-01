@@ -157,7 +157,9 @@ class Command(BaseCommand):
                 {'name': 'S&P 500', 'value': '5,284', 'change': 0.42},
                 {'name': 'NASDAQ 100', 'value': '18,642', 'change': 0.68},
                 {'name': 'Gold', 'value': '$2,340', 'change': 0.51},
-                {'name': 'WTI Crude Oil', 'value': '$78.20', 'change': -0.32},
+                {'name': 'Bitcoin (BTC)', 'value': '$67,200', 'change': 2.4, 'binance_symbol': 'btcusdt'},
+                {'name': 'Ethereum (ETH)', 'value': '$3,480', 'change': 1.8, 'binance_symbol': 'ethusdt'},
+                {'name': 'Solana (SOL)', 'value': '$142', 'change': -0.6, 'binance_symbol': 'solusdt'},
             ],
             'smart_ideas': [
                 {'title': 'AI & Tech Leaders', 'category': 'Equity', 'description': 'Curated basket of high-conviction AI infrastructure and platform leaders.', 'min_investment': '$50,000'},

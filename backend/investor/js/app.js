@@ -91,6 +91,7 @@ function showPage(id) {
   if (id === 'documents') renderDocumentsPage();
   if (id === 'settings') renderSettingsPage();
   if (id === 'kyc') renderKycPage();
+  if (id === 'markets') window.TFMarkets?.showPage();
   if (id === 'overview') window.TFCharts?.init(p());
 }
 
@@ -152,19 +153,7 @@ function renderHoldingsTables() {
 }
 
 function renderMarketMini() {
-  const grid = document.getElementById('marketMiniGrid');
-  const items = p().market_snapshot || [];
-  if (!grid) return;
-  grid.innerHTML = items.length
-    ? items.map(item => {
-      const cls = Number(item.change) >= 0 ? 'up' : 'down';
-      return `<div class="market-mini-card">
-        <div class="market-mini-name">${esc(item.name)}</div>
-        <div class="market-mini-price">${esc(item.value)}</div>
-        <div class="market-mini-chg ${cls}">${formatChange(item.change)}</div>
-      </div>`;
-    }).join('')
-    : '<div style="color:var(--text3);font-size:13px">Market data unavailable.</div>';
+  window.TFMarkets?.renderMini();
 }
 
 function renderSummaryRows() {
@@ -210,7 +199,7 @@ function applyPortfolioData() {
 
   renderAllocationLegend(portfolio.allocation || []);
   renderHoldingsTables();
-  renderMarketMini();
+  window.TFMarkets?.load(portfolio.market_snapshot || []);
   renderSummaryRows();
   window.TFCharts?.init(portfolio);
 }

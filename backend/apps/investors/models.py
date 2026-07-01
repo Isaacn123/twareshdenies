@@ -76,8 +76,13 @@ class PortfolioSnapshot(models.Model):
 class InvestorMarketItem(models.Model):
     investor = models.ForeignKey(InvestorProfile, on_delete=models.CASCADE, related_name='market_items')
     name = models.CharField(max_length=80)
-    value_display = models.CharField(max_length=40)
+    value_display = models.CharField(max_length=40, blank=True)
     change_pct = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    binance_symbol = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text='Optional Binance pair for live prices, e.g. btcusdt',
+    )
     sort_order = models.PositiveIntegerField(default=0)
 
     class Meta:

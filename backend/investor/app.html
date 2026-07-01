@@ -345,28 +345,13 @@
 
   <!-- ════════════════════ MARKETS PAGE ════════════════════ -->
   <div id="page-markets" class="page">
-    <div class="page-heading"><div class="section-title">Markets</div><div class="section-sub">Real-time overview of global markets and key asset classes</div></div>
-    <div class="market-full-grid">
-      <div class="market-full-card"><div class="mf-name">S&amp;P 500</div><div class="mf-price">5,487.03</div><div class="mf-change up">▲ +0.86% today</div><div class="mf-range"><span>L: 5,445.20</span><span>H: 5,492.10</span></div></div>
-      <div class="market-full-card"><div class="mf-name">NASDAQ</div><div class="mf-price">17,862.23</div><div class="mf-change up">▲ +1.12% today</div><div class="mf-range"><span>L: 17,720.45</span><span>H: 17,904.88</span></div></div>
-      <div class="market-full-card"><div class="mf-name">Dow Jones</div><div class="mf-price">39,118.86</div><div class="mf-change up">▲ +0.54% today</div><div class="mf-range"><span>L: 38,980.12</span><span>H: 39,145.00</span></div></div>
-      <div class="market-full-card"><div class="mf-name">Russell 2000</div><div class="mf-price">2,062.44</div><div class="mf-change up">▲ +0.73% today</div><div class="mf-range"><span>L: 2,045.10</span><span>H: 2,068.95</span></div></div>
-      <div class="market-full-card"><div class="mf-name">Bitcoin (BTC)</div><div class="mf-price">$67,842.35</div><div class="mf-change up">▲ +3.45% today</div><div class="mf-range"><span>L: $65,200</span><span>H: $68,100</span></div></div>
-      <div class="market-full-card"><div class="mf-name">Ethereum (ETH)</div><div class="mf-price">$3,512.68</div><div class="mf-change up">▲ +2.11% today</div><div class="mf-range"><span>L: $3,440</span><span>H: $3,528</span></div></div>
-      <div class="market-full-card"><div class="mf-name">Solana (SOL)</div><div class="mf-price">$164.35</div><div class="mf-change up">▲ +4.21% today</div><div class="mf-range"><span>L: $157.50</span><span>H: $166.90</span></div></div>
-      <div class="market-full-card"><div class="mf-name">Gold (XAU)</div><div class="mf-price">$2,336.20</div><div class="mf-change up">▲ +0.85% today</div><div class="mf-range"><span>L: $2,316</span><span>H: $2,342</span></div></div>
-    </div>
+    <div class="page-heading"><div class="section-title">Markets</div><div class="section-sub">Markets configured by your advisor — crypto pairs update live via Binance when linked</div></div>
+    <div class="market-full-grid" id="marketsFullGrid"></div>
     <div class="widget">
       <div class="widget-header"><span class="widget-title">Market Screener</span></div>
       <table class="holdings-table">
-        <thead><tr><th>Asset</th><th>Price</th><th>1D</th><th>1W</th><th>1M</th><th>YTD</th><th>Market Cap</th></tr></thead>
-        <tbody>
-          <tr><td><div class="asset-name-col"><div class="asset-icon" style="background:#f59e0b20;color:#f59e0b">₿</div><span class="asset-ticker">Bitcoin</span></div></td><td class="price-val">$67,842</td><td class="change-positive">+3.45%</td><td class="change-positive">+8.20%</td><td class="change-positive">+14.5%</td><td class="change-positive">+62.3%</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">$1.33T</td></tr>
-          <tr><td><div class="asset-name-col"><div class="asset-icon" style="background:#3b82f620;color:#3b82f6">Ξ</div><span class="asset-ticker">Ethereum</span></div></td><td class="price-val">$3,512</td><td class="change-positive">+2.11%</td><td class="change-positive">+5.80%</td><td class="change-positive">+9.3%</td><td class="change-positive">+44.7%</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">$421B</td></tr>
-          <tr><td><div class="asset-name-col"><div class="asset-icon" style="background:#9945ff20;color:#9945ff">◎</div><span class="asset-ticker">Solana</span></div></td><td class="price-val">$164</td><td class="change-positive">+4.21%</td><td class="change-positive">+11.4%</td><td class="change-positive">+22.1%</td><td class="change-positive">+81.2%</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">$75B</td></tr>
-          <tr><td><div class="asset-name-col"><div class="asset-icon" style="background:#f9731620;color:#f97316">🥇</div><span class="asset-ticker">Gold</span></div></td><td class="price-val">$2,336</td><td class="change-positive">+0.85%</td><td class="change-positive">+1.20%</td><td class="change-positive">+3.4%</td><td class="change-positive">+12.8%</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">$14.8T</td></tr>
-          <tr><td><div class="asset-name-col"><div class="asset-icon" style="background:#00000010;color:#000">🍎</div><span class="asset-ticker">Apple (AAPL)</span></div></td><td class="price-val">$195</td><td class="change-positive">+1.32%</td><td class="change-positive">+2.80%</td><td class="change-positive">+4.1%</td><td class="change-positive">+9.5%</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">$3.01T</td></tr>
-        </tbody>
+        <thead><tr><th>Asset</th><th>Price</th><th>1D</th><th>1W</th><th>1M</th><th>YTD</th><th>Source</th></tr></thead>
+        <tbody id="marketsScreenerBody"></tbody>
       </table>
     </div>
   </div>
@@ -403,6 +388,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="js/api.js"></script>
 <script src="assets/js/charts.js"></script>
+<script src="assets/js/markets.js"></script>
 <script src="js/app.js"></script>
 
 </body>

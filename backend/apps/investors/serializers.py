@@ -78,12 +78,12 @@ class InvestorHoldingSerializer(serializers.ModelSerializer):
 
 
 class InvestorMarketItemSerializer(serializers.ModelSerializer):
-    value = serializers.CharField(source='value_display')
-    change = serializers.DecimalField(source='change_pct', max_digits=8, decimal_places=2)
+    value = serializers.CharField(source='value_display', required=False, allow_blank=True)
+    change = serializers.DecimalField(source='change_pct', max_digits=8, decimal_places=2, required=False)
 
     class Meta:
         model = InvestorMarketItem
-        fields = ['id', 'name', 'value', 'change', 'sort_order']
+        fields = ['id', 'name', 'value', 'change', 'binance_symbol', 'sort_order']
         read_only_fields = ['id']
 
 
@@ -224,6 +224,7 @@ def sync_portfolio_data(profile, data):
                 name=row.get('name', ''),
                 value_display=row.get('value', ''),
                 change_pct=row.get('change', 0) or 0,
+                binance_symbol=(row.get('binance_symbol') or '').lower().strip(),
                 sort_order=i,
             )
 

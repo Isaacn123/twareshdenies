@@ -229,6 +229,7 @@ def build_portfolio_payload(profile):
                 'name': item.name,
                 'value': item.value_display,
                 'change': float(item.change_pct),
+                'binance_symbol': item.binance_symbol,
             }
             for item in market_items
         ],

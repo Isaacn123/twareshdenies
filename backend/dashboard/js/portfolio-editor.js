@@ -61,6 +61,16 @@ function pfSimpleRow(cells, scope, placeholders = []) {
   ).join('')}<td>${pfRowActions(scope)}</td></tr>`;
 }
 
+function pfMarketRow(item = {}) {
+  return `<tr>
+    <td><input class="table-input pf-market-cell" data-col="0" value="${escapeAttr(item.name || '')}" placeholder="Bitcoin (BTC)"></td>
+    <td><input class="table-input pf-market-cell" data-col="1" value="${escapeAttr(item.value ?? '')}" placeholder="$67,200 or 5,284"></td>
+    <td><input class="table-input pf-market-cell" data-col="2" type="number" step="0.01" value="${item.change ?? ''}" placeholder="2.4"></td>
+    <td><input class="table-input pf-market-cell" data-col="3" value="${escapeAttr(item.binance_symbol || '')}" placeholder="btcusdt (live)"></td>
+    <td>${pfRowActions('market')}</td>
+  </tr>`;
+}
+
 function pfAssetSection(key, label, assets) {
   const rows = assets?.length ? assets.map(item => pfAssetRow(item, key)).join('') : '';
   return `<details class="expand-row pf-asset-group" data-asset-key="${key}" ${key === 'crypto' ? 'open' : ''}>
@@ -120,8 +130,9 @@ function renderPortfolioEditor(investor = {}) {
       <details class="expand-row">
         <summary><span>Market snapshot</span><span class="expand-meta">${market.length} markets</span></summary>
         <div class="expand-body">
-          <div class="table-wrap"><table><thead><tr><th>Name</th><th>Value</th><th>Change %</th><th></th></tr></thead>
-          <tbody id="pfMarketBody">${market.map(item => pfSimpleRow([item.name, item.value, item.change], 'market', ['S&P 500', '5,284', '0.42'])).join('') || '<tr class="pf-empty-row"><td colspan="4" style="color:var(--muted)">No markets yet.</td></tr>'}</tbody></table></div>
+          <p style="color:var(--muted);font-size:13px;margin:0 0 12px">Shown on the investor Overview and Markets pages. Add a <strong>Binance symbol</strong> (e.g. <code>btcusdt</code>) for live crypto prices via WebSocket; leave blank for manual indices like S&amp;P 500.</p>
+          <div class="table-wrap"><table><thead><tr><th>Name</th><th>Value (fallback)</th><th>Change % (fallback)</th><th>Binance symbol</th><th></th></tr></thead>
+          <tbody id="pfMarketBody">${market.map(item => pfMarketRow(item)).join('') || '<tr class="pf-empty-row"><td colspan="5" style="color:var(--muted)">No markets yet.</td></tr>'}</tbody></table></div>
           <button type="button" class="btn btn-ghost btn-sm" data-pf-action="add-market">Add market</button>
         </div>
       </details>
@@ -176,6 +187,19 @@ function pfMoveRow(row, direction) {
   else if (direction === 'down' && row.nextElementSibling) row.parentElement.insertBefore(row.nextElementSibling, row);
 }
 
+function pfCollectMarketRows(tbody) {
+  if (!tbody) return [];
+  return [...tbody.querySelectorAll('tr')].filter(row => !row.classList.contains('pf-empty-row')).map(row => {
+    const cells = [...row.querySelectorAll('.pf-market-cell')];
+    return {
+      name: cells[0]?.value.trim() ?? '',
+      value: cells[1]?.value.trim() ?? '',
+      change: pfNum(cells[2]?.value, 0),
+      binance_symbol: (cells[3]?.value.trim() ?? '').toLowerCase(),
+    };
+  }).filter(item => item.name || item.binance_symbol);
+}
+
 function pfCollectSimpleRows(tbody, scope, cols) {
   if (!tbody) return [];
   return [...tbody.querySelectorAll('tr')].filter(row => !row.classList.contains('pf-empty-row')).map(row => {
@@ -217,7 +241,7 @@ function collectPortfolioFromForm() {
   return {
     total_invested: pfNum(val('pf-total-invested'), 0),
     holdings,
-    market_snapshot: pfCollectSimpleRows(document.getElementById('pfMarketBody'), 'market', ['name', 'value', 'change']),
+    market_snapshot: pfCollectMarketRows(document.getElementById('pfMarketBody')),
     alerts: pfCollectSimpleRows(document.getElementById('pfAlertsBody'), 'alert', ['title', 'date', 'type']),
     otc_trades: pfCollectSimpleRows(document.getElementById('pfOtcBody'), 'otc', ['title', 'side', 'amount', 'settlement']),
     smart_ideas: pfCollectSimpleRows(document.getElementById('pfIdeasBody'), 'idea', ['title', 'category', 'min_investment', 'description']),
@@ -253,7 +277,7 @@ function bindPortfolioEditor() {
     if (action === 'add-market') {
       const tbody = document.getElementById('pfMarketBody');
       pfClearEmptyRow(tbody);
-      tbody.insertAdjacentHTML('beforeend', pfSimpleRow(['', '', ''], 'market'));
+      tbody.insertAdjacentHTML('beforeend', pfMarketRow());
       return;
     }
     if (action === 'add-alert') {
