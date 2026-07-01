@@ -513,7 +513,7 @@ async function renderInvestors() {
     </div>
     <div class="card table-wrap">
       <table>
-        <thead><tr><th>Name</th><th>Username</th><th>Type</th><th>Portal</th><th>AUM</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Username</th><th>Type</th><th>Portal</th><th>KYC</th><th>AUM</th><th></th></tr></thead>
         <tbody>
           ${investors.length ? investors.map(inv => `
             <tr>
@@ -521,11 +521,12 @@ async function renderInvestors() {
               <td>${escapeHtml(inv.user?.username || inv.username || '-')}</td>
               <td>${escapeHtml(inv.investor_type)}</td>
               <td>${inv.portal_enabled ? '<span class="tag">Active</span>' : '<span class="tag muted">Disabled</span>'}</td>
+              <td>${kycStatusBadge(inv.kyc?.status || inv.kyc_status, inv.kyc?.status_label)}</td>
               <td>${escapeHtml(inv.portfolio?.net_worth || inv.portfolio?.aum || '—')}</td>
               <td>
                 <button class="btn btn-ghost manage-investor" data-id="${inv.id}" type="button">Manage</button>
               </td>
-            </tr>`).join('') : '<tr><td colspan="6">No investors yet.</td></tr>'}
+            </tr>`).join('') : '<tr><td colspan="7">No investors yet.</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -561,6 +562,7 @@ async function openInvestorEditor(investor, allInvestors) {
       </div>
     </div>
     ${renderPortfolioEditor(investor || {})}
+    ${investor ? renderKycAdminPanel(investor) : ''}
     <div class="field-richtext"><label>Admin notes</label><textarea id="inv-notes" data-ckeditor>${richTextareaValue(investor?.admin_notes || '')}</textarea></div>
     <div class="field"><label>Document title</label><input id="doc-title" placeholder="Q1 Performance Report"></div>
     <div class="field-richtext"><label>Document description</label><textarea id="doc-description" data-ckeditor placeholder="Optional summary shown in the investor portal"></textarea></div>
@@ -572,6 +574,7 @@ async function openInvestorEditor(investor, allInvestors) {
 
   await CKE.initIn(editor);
   bindPortfolioEditor();
+  if (investor?.id) bindKycAdmin(investor.id);
 
   document.getElementById('saveInvestorBtn').onclick = async () => {
     const portfolio = collectPortfolioFromForm();

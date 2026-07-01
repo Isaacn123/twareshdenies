@@ -121,6 +121,7 @@ class Command(BaseCommand):
         investor_role = Role.objects.get(slug='investor')
         UserProfile.objects.update_or_create(user=demo_user, defaults={'role': investor_role})
         from apps.investors.serializers import sync_portfolio_data
+        from apps.investors.kyc_service import get_or_create_kyc
 
         demo_portfolio = {
             'total_invested': 2150000,
@@ -184,6 +185,7 @@ class Command(BaseCommand):
             },
         )
         sync_portfolio_data(profile, demo_portfolio)
+        get_or_create_kyc(profile)
 
         from apps.investors.models import PortfolioSnapshot
         from datetime import date

@@ -71,6 +71,11 @@
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
       Documents
     </div>
+    <div class="nav-item" data-page="kyc">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+      KYC Verification
+      <span class="nav-badge hidden" id="navKycBadge"></span>
+    </div>
     <div class="nav-item" data-page="alerts">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
       Alerts
@@ -104,7 +109,7 @@
       <div class="topbar-greeting" id="topbarGreeting">Welcome back,</div>
       <div class="topbar-title">
         TWARESH FINANCIAL SERVICES &amp; CONSULTS LTD
-        <div class="verified-badge">
+        <div class="verified-badge" id="topbarKycBadge" title="KYC status">
           <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
         </div>
       </div>
@@ -388,6 +393,7 @@
   <div id="page-watchlist"   class="page"><div class="stub-hero"><div class="stub-icon">👁️</div><div class="stub-title">Watchlist</div><div class="stub-sub">Track your favourite assets and set custom price alerts.</div><div class="coming-badge">COMING SOON</div></div></div>
   <div id="page-reports"     class="page"><div class="stub-hero"><div class="stub-icon">📊</div><div class="stub-title">Reports</div><div class="stub-sub">Download performance reports, tax statements, and portfolio summaries.</div><div class="coming-badge">COMING SOON</div></div></div>
   <div id="page-documents" class="page"><div id="documentsContent"></div></div>
+  <div id="page-kyc" class="page"><div id="kycContent"></div></div>
   <div id="page-alerts" class="page"><div class="stub-hero"><div class="stub-icon">🔔</div><div class="stub-title">Alerts</div><div class="stub-sub">Set price alerts and get notified on market movements.</div><div class="coming-badge">COMING SOON</div></div></div>
   <div id="page-settings" class="page"><div id="settingsContent"></div></div>
   <div id="page-support"     class="page"><div class="stub-hero"><div class="stub-icon">💬</div><div class="stub-title">Support</div><div class="stub-sub">Connect with your dedicated wealth concierge or browse our help centre.</div><div style="margin-top:20px"><button class="btn-schedule" style="display:inline-block;width:auto;padding:10px 28px;font-size:13px">Schedule a Call with Your Concierge</button></div></div></div>

@@ -200,6 +200,23 @@ const API = {
     });
   },
 
+  reviewInvestorKyc(investorId, payload) {
+    return this.request('/api/admin/investors/' + investorId + '/review_kyc/', {
+      method: 'POST',
+      headers: this.authHeaders(),
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async openInvestorKycDocument(investorId, docId) {
+    const res = await fetch(this.base + `/api/admin/investors/${investorId}/kyc/documents/${docId}/`, {
+      headers: this.authHeaders(false),
+    });
+    if (!res.ok) throw new Error('Could not open document');
+    const blob = await res.blob();
+    window.open(URL.createObjectURL(blob), '_blank', 'noopener');
+  },
+
   getSubmissions() {
     return this.request('/api/admin/submissions/', { headers: this.authHeaders() });
   },

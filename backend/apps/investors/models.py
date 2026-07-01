@@ -172,3 +172,74 @@ class InvestorActivity(models.Model):
     class Meta:
         ordering = ['-created_at']
         verbose_name_plural = 'Investor activities'
+
+
+def kyc_document_upload_path(instance, filename):
+    safe_name = filename.replace('..', '').split('/')[-1]
+    return f'kyc/{instance.kyc.investor_id}/{instance.doc_type}_{safe_name}'
+
+
+class InvestorKyc(models.Model):
+    STATUS_CHOICES = [
+        ('not_started', 'Not started'),
+        ('in_progress', 'In progress'),
+        ('submitted', 'Submitted'),
+        ('under_review', 'Under review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    ID_TYPE_CHOICES = [
+        ('national_id', 'National ID'),
+        ('passport', 'Passport'),
+        ('drivers_license', "Driver's license"),
+    ]
+
+    investor = models.OneToOneField(InvestorProfile, on_delete=models.CASCADE, related_name='kyc')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='not_started')
+    date_of_birth = models.DateField(null=True, blank=True)
+    nationality = models.CharField(max_length=80, blank=True)
+    country_of_residence = models.CharField(max_length=80, blank=True)
+    address_line1 = models.CharField(max_length=200, blank=True)
+    address_line2 = models.CharField(max_length=200, blank=True)
+    city = models.CharField(max_length=80, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
+    id_type = models.CharField(max_length=30, choices=ID_TYPE_CHOICES, blank=True)
+    id_number = models.CharField(max_length=80, blank=True)
+    occupation = models.CharField(max_length=120, blank=True)
+    source_of_funds = models.TextField(blank=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(
+        'auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='kyc_reviews'
+    )
+    rejection_reason = models.TextField(blank=True)
+    admin_notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Investor KYC'
+        verbose_name_plural = 'Investor KYC records'
+
+    def __str__(self):
+        return f'KYC — {self.investor.full_name} ({self.status})'
+
+
+class InvestorKycDocument(models.Model):
+    DOC_TYPE_CHOICES = [
+        ('id_front', 'Government ID (front)'),
+        ('id_back', 'Government ID (back)'),
+        ('proof_of_address', 'Proof of address'),
+        ('selfie', 'Selfie with ID'),
+    ]
+
+    kyc = models.ForeignKey(InvestorKyc, on_delete=models.CASCADE, related_name='documents')
+    doc_type = models.CharField(max_length=30, choices=DOC_TYPE_CHOICES)
+    file = models.FileField(upload_to=kyc_document_upload_path)
+    original_name = models.CharField(max_length=255, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['doc_type']
+        unique_together = [['kyc', 'doc_type']]
+

@@ -10,12 +10,14 @@ from .models import (
     InvestorCurrencySetting,
     InvestorDocument,
     InvestorHolding,
+    InvestorKyc,
     InvestorMarketItem,
     InvestorMessage,
     InvestorOtcTrade,
     InvestorProfile,
     InvestorSmartIdea,
 )
+from .kyc_service import build_kyc_payload, get_or_create_kyc
 from .portfolio_service import build_portfolio_payload, save_portfolio_snapshot
 
 User = get_user_model()
@@ -298,14 +300,16 @@ class InvestorProfileSerializer(serializers.ModelSerializer):
     otc_trades = serializers.SerializerMethodField()
     smart_ideas = serializers.SerializerMethodField()
     currency = serializers.SerializerMethodField()
+    kyc = serializers.SerializerMethodField()
+    kyc_status = serializers.SerializerMethodField()
 
     class Meta:
         model = InvestorProfile
         fields = [
             'id', 'username', 'username_input', 'email', 'password', 'full_name', 'phone', 'investor_type',
             'portal_enabled', 'total_invested', 'portfolio', 'portfolio_data', 'holdings', 'market_snapshot',
-            'alerts', 'otc_trades', 'smart_ideas', 'currency', 'admin_notes', 'is_active', 'documents',
-            'recent_activity', 'created_at', 'updated_at',
+            'alerts', 'otc_trades', 'smart_ideas', 'currency', 'kyc', 'kyc_status', 'admin_notes', 'is_active',
+            'documents', 'recent_activity', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'portfolio']
 
@@ -332,6 +336,18 @@ class InvestorProfileSerializer(serializers.ModelSerializer):
         if not setting:
             return {}
         return InvestorCurrencySettingSerializer(setting).data
+
+    def get_kyc(self, obj):
+        kyc = getattr(obj, 'kyc', None)
+        if not kyc:
+            kyc = get_or_create_kyc(obj)
+        return build_kyc_payload(kyc)
+
+    def get_kyc_status(self, obj):
+        kyc = getattr(obj, 'kyc', None)
+        if not kyc:
+            return 'not_started'
+        return kyc.status
 
     def create(self, validated_data):
         user_data = validated_data.pop('user', {})
