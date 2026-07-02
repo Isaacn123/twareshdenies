@@ -121,103 +121,56 @@ function initUI() {
   document.getElementById('year').textContent = new Date().getFullYear();
 
   initTicker();
+  window.TFBinanceLive?.initLiveTable();
   initCalculator();
 }
 
-const BINANCE_WS = 'wss://stream.binance.com:9443/stream';
-
-const TICKER_COINS = [
-  { sym: 'BTC', name: 'Bitcoin', pair: 'btcusdt' },
-  { sym: 'ETH', name: 'Ethereum', pair: 'ethusdt' },
-  { sym: 'BNB', name: 'BNB', pair: 'bnbusdt' },
-  { sym: 'SOL', name: 'Solana', pair: 'solusdt' },
-  { sym: 'XRP', name: 'XRP', pair: 'xrpusdt' },
-  { sym: 'DOGE', name: 'Dogecoin', pair: 'dogeusdt' },
-];
-
 function initTicker() {
   const tickerTrack = document.getElementById('tickerTrack');
-  if (!tickerTrack) return;
+  if (!tickerTrack || !window.TFBinanceLive) return;
 
-  const live = {};
-  let ws = null;
-  let reconnectTimer = null;
-
-  const fmtPrice = v => {
-    const n = Number(v);
-    if (Number.isNaN(n)) return '—';
-    return n >= 1000
-      ? '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
-      : '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-  };
-
-  function tickHtml(coin) {
-    const tick = live[coin.pair];
-    const price = tick ? fmtPrice(tick.price) : '—';
+  function tickHtml(coin, tick) {
+    const price = tick ? window.TFBinanceLive.fmtPrice(tick.price) : '—';
     const chg = tick ? Number(tick.change) : 0;
-    const cls = chg >= 0 ? 'up' : 'down';
+    const cls = window.TFBinanceLive.changeClass(chg);
     const sign = chg >= 0 ? '▲' : '▼';
     const chgText = tick ? `${sign} ${Math.abs(chg).toFixed(2)}%` : '…';
     return `<div class="tick" data-pair="${coin.pair}"><span class="sym">${coin.sym}<small>${coin.name}</small></span><span class="price">${price}</span><span class="chg ${cls}">${chgText}</span></div>`;
   }
 
-  function renderTrack() {
-    const html = TICKER_COINS.map(tickHtml).join('');
+  function renderTrack(live, coins) {
+    const html = coins.map(coin => tickHtml(coin, live[coin.pair])).join('');
     tickerTrack.innerHTML = html + html;
   }
 
-  function patchTrack() {
-    document.querySelectorAll('.tick[data-pair]').forEach(el => {
-      const pair = el.dataset.pair;
-      const tick = live[pair];
+  function patchTrack(live, coins) {
+    coins.forEach(coin => {
+      const tick = live[coin.pair];
       if (!tick) return;
-      const chg = Number(tick.change);
-      const cls = chg >= 0 ? 'up' : 'down';
-      const sign = chg >= 0 ? '▲' : '▼';
-      const priceEl = el.querySelector('.price');
-      const chgEl = el.querySelector('.chg');
-      if (priceEl) priceEl.textContent = fmtPrice(tick.price);
-      if (chgEl) {
-        chgEl.className = `chg ${cls}`;
-        chgEl.textContent = `${sign} ${Math.abs(chg).toFixed(2)}%`;
-      }
+      document.querySelectorAll(`.tick[data-pair="${coin.pair}"]`).forEach(el => {
+        const chg = Number(tick.change);
+        const cls = window.TFBinanceLive.changeClass(chg);
+        const sign = chg >= 0 ? '▲' : '▼';
+        const priceEl = el.querySelector('.price');
+        const chgEl = el.querySelector('.chg');
+        if (priceEl) priceEl.textContent = window.TFBinanceLive.fmtPrice(tick.price);
+        if (chgEl) {
+          chgEl.className = `chg ${cls}`;
+          chgEl.textContent = `${sign} ${Math.abs(chg).toFixed(2)}%`;
+        }
+      });
     });
   }
 
-  function connect() {
-    if (reconnectTimer) {
-      clearTimeout(reconnectTimer);
-      reconnectTimer = null;
+  let rendered = false;
+  window.TFBinanceLive.subscribe((live, coins) => {
+    if (!rendered) {
+      renderTrack(live, coins);
+      rendered = true;
+      return;
     }
-    if (ws) {
-      ws.onclose = null;
-      ws.close();
-      ws = null;
-    }
-
-    const streams = TICKER_COINS.map(c => `${c.pair}@miniTicker`).join('/');
-    ws = new WebSocket(`${BINANCE_WS}?streams=${streams}`);
-
-    ws.onmessage = event => {
-      try {
-        const payload = JSON.parse(event.data);
-        const tick = payload.data || payload;
-        const pair = String(tick.s || '').toLowerCase();
-        if (!pair) return;
-        live[pair] = { price: tick.c, change: tick.P };
-        patchTrack();
-      } catch {
-        /* ignore malformed ticks */
-      }
-    };
-
-    ws.onclose = () => {
-      reconnectTimer = setTimeout(connect, 5000);
-    };
-  }
-
-  renderTrack();
-  connect();
+    patchTrack(live, coins);
+  });
 }
 
 function initCalculator() {

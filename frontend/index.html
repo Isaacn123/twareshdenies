@@ -348,6 +348,32 @@
         <div class="instr-row"><div class="instr-name">Zcash <small>ZEC</small></div><p>Selective privacy-asset allocation held within defined exposure limits as a satellite position in the broader framework.</p></div>
       </div>
     </div>
+
+    <div class="live-markets reveal reveal-d3">
+      <div class="live-markets-head">
+        <div>
+          <div class="eyebrow">Live Crypto</div>
+          <h3 class="live-markets-title">Spot Market <em>Updates</em></h3>
+        </div>
+        <div class="live-markets-badge"><span class="live-dot"></span> Binance · Live</div>
+      </div>
+      <div class="live-markets-table-wrap">
+        <table class="live-markets-table" id="liveMarketsTable" aria-label="Live cryptocurrency prices">
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th>Price (USD)</th>
+              <th>24h Change</th>
+              <th>24h High</th>
+              <th>24h Low</th>
+              <th>Feed</th>
+            </tr>
+          </thead>
+          <tbody id="liveMarketsBody"></tbody>
+        </table>
+      </div>
+      <p class="live-markets-note">Market data via Binance WebSocket · Informational only · Not investment advice</p>
+    </div>
   </div>
 </section>
 
@@ -626,6 +652,7 @@
 <script src="js/social-icons.js"></script>
 <script src="js/api.js"></script>
 <script src="js/sections-content.js"></script>
+<script src="js/binance-live.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

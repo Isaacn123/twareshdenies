@@ -676,6 +676,45 @@ h1,h2,h3,.serif{font-family:var(--serif);font-weight:500;line-height:1.15;letter
 .instr-row p{font-size:14px;color:var(--grey)}
 @media (max-width:760px){.instr-row{grid-template-columns:1fr;gap:8px}}
 
+/* ---------- live crypto table (markets section) ---------- */
+.live-markets{margin-top:72px;border-top:1px solid var(--line-soft);padding-top:56px}
+.live-markets-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+.live-markets-title{font-family:var(--serif);font-size:clamp(24px,2.6vw,34px);font-weight:500;color:var(--white);margin:8px 0 0}
+.live-markets-title em{font-style:italic;color:var(--gold-bright)}
+.live-markets-badge{
+  display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid var(--line-soft);
+  border-radius:999px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--grey-2);background:rgba(255,255,255,.02)
+}
+.live-markets-badge .live-dot{width:7px;height:7px;border-radius:50%;background:#5BD49A;animation:blink 1.6s infinite}
+.live-markets-table-wrap{overflow-x:auto;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.01))}
+.live-markets-table{width:100%;border-collapse:collapse;min-width:720px}
+.live-markets-table th{
+  text-align:left;padding:14px 18px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--grey-2);font-weight:600;border-bottom:1px solid var(--line-soft);background:rgba(0,0,0,.25)
+}
+.live-markets-table th:not(:first-child){text-align:right}
+.live-markets-table td{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.04);font-variant-numeric:tabular-nums}
+.live-markets-table tbody tr{transition:background .25s}
+.live-markets-table tbody tr:hover{background:rgba(255,255,255,.02)}
+.live-markets-table tbody tr:last-child td{border-bottom:none}
+.lm-asset{display:flex;flex-direction:column;gap:2px}
+.lm-sym{font-size:14px;font-weight:600;letter-spacing:.08em;color:var(--white)}
+.lm-name{font-size:12px;color:var(--grey-2)}
+.lm-price{text-align:right;font-size:15px;font-weight:500;color:var(--gold-bright)}
+.lm-change{text-align:right;font-size:13px;font-weight:700}
+.lm-change.up{color:#5BD49A}
+.lm-change.down{color:#E07B7B}
+.lm-change.flat{color:var(--grey-2)}
+.lm-muted{text-align:right;font-size:13px;color:var(--grey)}
+.lm-feed{text-align:right;font-size:11px;color:var(--grey-2);letter-spacing:.06em}
+.lm-live{display:inline-flex;align-items:center;gap:6px;color:#5BD49A;font-weight:600}
+.lm-live .live-dot{width:6px;height:6px;border-radius:50%;background:#5BD49A;animation:blink 1.6s infinite}
+.live-markets-note{margin:12px 2px 0;font-size:11px;color:var(--grey-2);letter-spacing:.04em}
+@media (max-width:760px){
+  .live-markets-table th,.live-markets-table td{padding:12px 14px}
+  .live-markets-table{min-width:640px}
+}
+
 /* ---------- institutional mandates ---------- */
 .institutional{
   padding:140px 0;background:linear-gradient(180deg,var(--navy) 0%,var(--navy-2) 100%);
