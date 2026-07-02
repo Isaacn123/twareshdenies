@@ -873,7 +873,9 @@ function renderHeaderNavRows(items) {
 
 function footerLinkRowHtml(link = {}) {
   const contactKey = link.contact_key || '';
+  const visible = link.visible !== false;
   return `<tr>
+    <td class="nav-check"><label><input type="checkbox" class="footer-link-visible"${visible ? ' checked' : ''}> Show</label></td>
     <td><input type="text" class="footer-link-label table-input" value="${escapeAttr(link.label || '')}" placeholder="Link label"></td>
     <td><input type="text" class="footer-link-href table-input" value="${escapeAttr(link.href || '')}" placeholder="#contact or mailto:..."></td>
     <td><select class="footer-link-contact-key table-input">${NAV_CONTACT_KEYS.map(opt =>
@@ -886,8 +888,12 @@ function footerLinkRowHtml(link = {}) {
 
 function footerColumnHtml(col = {}) {
   const links = col.links?.length ? col.links : [];
+  const colVisible = col.visible !== false;
   return `<div class="footer-nav-column">
     <div class="footer-nav-column-head">
+      <label class="nav-check" style="margin:0 12px 0 0;align-self:flex-end;padding-bottom:8px">
+        <input type="checkbox" class="footer-col-visible"${colVisible ? ' checked' : ''}> Show column
+      </label>
       <div class="field" style="flex:1;margin:0">
         <label>Column title</label>
         <input type="text" class="footer-col-title" value="${escapeAttr(col.title || '')}" placeholder="Navigate">
@@ -897,11 +903,11 @@ function footerColumnHtml(col = {}) {
     <div class="table-wrap">
       <table class="footer-links-table">
         <thead>
-          <tr><th>Label</th><th>Link</th><th>Contact field</th><th>Calendly</th><th></th></tr>
+          <tr><th>Show</th><th>Label</th><th>Link</th><th>Contact field</th><th>Calendly</th><th></th></tr>
         </thead>
         <tbody>${links.length
           ? links.map(link => footerLinkRowHtml(link)).join('')
-          : '<tr class="nav-empty-row"><td colspan="5" style="color:var(--muted)">No links in this column.</td></tr>'}</tbody>
+          : '<tr class="nav-empty-row"><td colspan="6" style="color:var(--muted)">No links in this column.</td></tr>'}</tbody>
       </table>
     </div>
     <button type="button" class="btn btn-ghost btn-sm" data-nav-action="add-footer-link">Add link</button>
@@ -927,8 +933,8 @@ function collectHeaderNavFromForm() {
       if (style) item.style = style;
       const liClass = row.querySelector('.nav-header-li-class').value.trim();
       if (liClass) item.li_class = liClass;
-      if (row.querySelector('.nav-header-calendly').checked) item.calendly = true;
-      if (!row.querySelector('.nav-header-visible').checked) item.visible = false;
+      if (row.querySelector('.nav-header-calendly')?.checked) item.calendly = true;
+      item.visible = row.querySelector('.nav-header-visible')?.checked !== false;
       return item;
     })
     .filter(item => item.label || item.href);
@@ -945,12 +951,14 @@ function collectFooterNavFromForm() {
         };
         const contactKey = row.querySelector('.footer-link-contact-key').value;
         if (contactKey) item.contact_key = contactKey;
-        if (row.querySelector('.footer-link-calendly').checked) item.calendly = true;
+        if (row.querySelector('.footer-link-calendly')?.checked) item.calendly = true;
+        item.visible = row.querySelector('.footer-link-visible')?.checked !== false;
         return item;
       })
       .filter(item => item.label || item.href);
     return {
       title: colEl.querySelector('.footer-col-title').value.trim(),
+      visible: colEl.querySelector('.footer-col-visible')?.checked !== false,
       links,
     };
   }).filter(col => col.title || col.links.length);
@@ -1025,7 +1033,7 @@ function bindNavigationEditor() {
       const tbody = row.closest('tbody');
       row.remove();
       if (!tbody.querySelector('tr')) {
-        tbody.innerHTML = '<tr class="nav-empty-row"><td colspan="5" style="color:var(--muted)">No links in this column.</td></tr>';
+        tbody.innerHTML = '<tr class="nav-empty-row"><td colspan="6" style="color:var(--muted)">No links in this column.</td></tr>';
       }
       return;
     }
@@ -1156,7 +1164,7 @@ async function renderSettings() {
     </div>
     <div class="card nav-editor-card settings-section" id="navEditor" style="margin-top:18px">
       <h3 style="color:var(--text);font-size:18px;margin-top:0">Navigation (header &amp; footer)</h3>
-      <p style="color:var(--muted);font-size:13px;margin:0 0 16px">Manage the top bar, mobile menu, and footer link columns. Uncheck <strong>Show</strong> on a header row to hide it from the public site without deleting it. <strong>Calendly</strong> is an online booking tool — when checked, that link opens your Calendly URL from contact settings (e.g. <code style="font-size:12px">https://calendly.com/your-name</code>) instead of the Link field.</p>
+      <p style="color:var(--muted);font-size:13px;margin:0 0 16px">Uncheck <strong>Show</strong> on header rows or footer links to hide them on the public site. Uncheck <strong>Show column</strong> to hide an entire footer column. Save navigation after changes.</p>
 
       <div class="nav-editor-section">
         <div class="nav-editor-section-head">

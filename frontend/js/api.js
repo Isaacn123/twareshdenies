@@ -65,13 +65,24 @@ function headerLinkHtml(item) {
   return `<a ${attrs}>${escNav(item.label)}</a>`;
 }
 
+function isNavItemVisible(item) {
+  if (!item) return false;
+  const visible = item.visible;
+  if (visible === false || visible === 'false' || visible === 0 || visible === '0') return false;
+  return true;
+}
+
+function visibleNavItems(items) {
+  return (items || []).filter(isNavItemVisible);
+}
+
 function applyNavigation(nav) {
   if (!nav) return;
 
-  const headerItems = (nav.header || []).filter(item => item.visible !== false);
+  const headerItems = visibleNavItems(nav.header);
 
   const headerNav = document.getElementById('headerNav');
-  if (headerNav && headerItems.length) {
+  if (headerNav) {
     headerNav.innerHTML = headerItems.map(item => {
       const liClass = item.li_class ? ` class="${escNav(item.li_class)}"` : '';
       return `<li${liClass}>${headerLinkHtml(item)}</li>`;
@@ -79,7 +90,7 @@ function applyNavigation(nav) {
   }
 
   const mobileMenu = document.getElementById('mobileMenu');
-  if (mobileMenu && headerItems.length) {
+  if (mobileMenu) {
     mobileMenu.innerHTML = headerItems.map(item => {
       if (item.style === 'gold') {
         return `<a ${navLinkAttrs(item)} class="btn btn-gold">${escNav(item.label)}</a>`;
@@ -92,14 +103,19 @@ function applyNavigation(nav) {
   }
 
   const footerCols = document.getElementById('footerNavColumns');
-  if (footerCols && nav.footer_columns?.length) {
-    footerCols.innerHTML = nav.footer_columns.map(col => `
+  if (footerCols) {
+    footerCols.innerHTML = (nav.footer_columns || []).map(col => {
+      if (!isNavItemVisible(col)) return '';
+      const links = visibleNavItems(col.links);
+      if (!links.length) return '';
+      return `
       <div class="footer-col">
         <h4>${escNav(col.title)}</h4>
-        <ul>${(col.links || []).map(link =>
+        <ul>${links.map(link =>
           `<li><a ${navLinkAttrs(link)}>${escNav(link.label)}</a></li>`
         ).join('')}</ul>
-      </div>`).join('');
+      </div>`;
+    }).filter(Boolean).join('');
   }
 }
 
@@ -269,7 +285,7 @@ function applySiteContent(site) {
 
 async function loadSiteConfig() {
   try {
-    const res = await fetch(`${API_BASE}/api/site/`);
+    const res = await fetch(`${API_BASE}/api/site/`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to load site config');
     window.SITE_CONFIG = await res.json();
   } catch {

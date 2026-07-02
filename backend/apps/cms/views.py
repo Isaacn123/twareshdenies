@@ -15,6 +15,7 @@ from .serializers import (
     SiteSettingsSerializer,
 )
 from .social_defaults import build_default_socials
+from .navigation_utils import public_navigation
 
 
 def get_site_settings():
@@ -45,6 +46,7 @@ def public_site(request):
     published_sections = Section.objects.filter(is_published=True)
 
     data = settings_payload(settings_obj)
+    data['navigation'] = public_navigation(data.get('navigation'))
     data['visibility'] = visibility
     data['section_content'] = {
         s.page_key: s.content for s in Section.objects.exclude(page_key='').exclude(page_key__isnull=True)
