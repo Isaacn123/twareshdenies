@@ -19,27 +19,41 @@ function kycStatusBadge(status, label) {
   return `<span class="kyc-badge kyc-badge-${cls}">${escapeHtml(label || status)}</span>`;
 }
 
+function kycSetAllSections(open) {
+  document.querySelectorAll('#kycAdminPanel details').forEach(el => { el.open = open; });
+}
+
 function renderKycAdminPanel(investor) {
   const kyc = investor?.kyc || {};
   const docs = kyc.documents || {};
   const docRows = Object.values(docs);
+  const statusLabel = kyc.status_label || kyc.status || 'Not started';
 
   return `
-    <div id="kycAdminPanel" class="card stack-sections" style="margin-top:18px">
-      <div class="page-heading" style="margin:0">
-        <h4 style="margin:0;color:var(--text)">KYC verification</h4>
-        <p style="margin:6px 0 0;color:var(--muted);font-size:13px">Review identity documents and compliance details submitted by the investor.</p>
+    <div id="kycAdminPanel" class="stack-sections" style="margin-top:18px">
+      <div class="pf-section-toolbar">
+        <span style="color:var(--muted);font-size:13px">KYC sections · ${escapeHtml(statusLabel)}</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn btn-ghost btn-sm" data-kyc-action="expand-all">Expand all</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-kyc-action="collapse-all">Collapse all</button>
+        </div>
       </div>
 
-      <div class="grid-2">
-        <div class="side-item"><small>Status</small><strong>${kycStatusBadge(kyc.status, kyc.status_label)}</strong></div>
-        <div class="side-item"><small>Progress</small><strong>${kyc.progress_pct ?? 0}% complete</strong></div>
-        <div class="side-item"><small>Submitted</small><strong>${kyc.submitted_at ? new Date(kyc.submitted_at).toLocaleString() : '—'}</strong></div>
-        <div class="side-item"><small>Reviewed</small><strong>${kyc.reviewed_at ? new Date(kyc.reviewed_at).toLocaleString() : '—'}</strong></div>
-      </div>
+      <details class="expand-row pf-section">
+        <summary><span>Status overview</span><span class="expand-meta">${escapeHtml(statusLabel)} · ${kyc.progress_pct ?? 0}%</span></summary>
+        <div class="expand-body">
+          <p style="color:var(--muted);font-size:13px;margin:0 0 14px">Review identity documents and compliance details submitted by the investor.</p>
+          <div class="grid-2">
+            <div class="side-item"><small>Status</small><strong>${kycStatusBadge(kyc.status, kyc.status_label)}</strong></div>
+            <div class="side-item"><small>Progress</small><strong>${kyc.progress_pct ?? 0}% complete</strong></div>
+            <div class="side-item"><small>Submitted</small><strong>${kyc.submitted_at ? new Date(kyc.submitted_at).toLocaleString() : '—'}</strong></div>
+            <div class="side-item"><small>Reviewed</small><strong>${kyc.reviewed_at ? new Date(kyc.reviewed_at).toLocaleString() : '—'}</strong></div>
+          </div>
+        </div>
+      </details>
 
-      <details class="expand-row" ${kyc.status !== 'not_started' ? 'open' : ''}>
-        <summary><span>Identity details</span></summary>
+      <details class="expand-row pf-section">
+        <summary><span>Identity details</span><span class="expand-meta">${escapeHtml(kyc.nationality || kyc.id_type || 'Not provided')}</span></summary>
         <div class="expand-body grid-2">
           <div class="side-item"><small>Date of birth</small><strong>${escapeHtml(kyc.date_of_birth || '—')}</strong></div>
           <div class="side-item"><small>Nationality</small><strong>${escapeHtml(kyc.nationality || '—')}</strong></div>
@@ -51,7 +65,7 @@ function renderKycAdminPanel(investor) {
         </div>
       </details>
 
-      <details class="expand-row" open>
+      <details class="expand-row pf-section">
         <summary><span>Uploaded documents</span><span class="expand-meta">${docRows.length} files</span></summary>
         <div class="expand-body">
           <div class="table-wrap">
@@ -71,18 +85,31 @@ function renderKycAdminPanel(investor) {
         </div>
       </details>
 
-      ${kyc.rejection_reason ? `<div class="card" style="margin:0;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.06)"><strong style="color:#ef4444">Previous rejection reason</strong><p style="margin:8px 0 0;color:var(--text)">${escapeHtml(kyc.rejection_reason)}</p></div>` : ''}
+      ${kyc.rejection_reason ? `
+      <details class="expand-row pf-section">
+        <summary><span>Previous rejection</span><span class="expand-meta">Rejected</span></summary>
+        <div class="expand-body">
+          <div class="card" style="margin:0;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.06)">
+            <strong style="color:#ef4444">Previous rejection reason</strong>
+            <p style="margin:8px 0 0;color:var(--text)">${escapeHtml(kyc.rejection_reason)}</p>
+          </div>
+        </div>
+      </details>` : ''}
 
-      <div class="grid-2">
-        <div class="field" style="grid-column:1/-1"><label>Internal admin notes</label><textarea id="kycAdminNotes" rows="3" class="table-input">${escapeAttr(kyc.admin_notes || '')}</textarea></div>
-        <div class="field" style="grid-column:1/-1"><label>Rejection reason (shown to investor if rejected)</label><textarea id="kycRejectionReason" rows="2" class="table-input" placeholder="Explain what needs to be corrected">${escapeAttr(kyc.rejection_reason || '')}</textarea></div>
-      </div>
-
-      <div class="page-toolbar" style="margin:0">
-        <button type="button" class="btn btn-primary" id="kycApproveBtn" ${kyc.status === 'approved' ? 'disabled' : ''}>Approve KYC</button>
-        <button type="button" class="btn btn-ghost" id="kycReviewBtn" ${kyc.status === 'under_review' ? 'disabled' : ''}>Mark under review</button>
-        <button type="button" class="btn btn-ghost" id="kycRejectBtn" ${!['under_review', 'submitted', 'in_progress'].includes(kyc.status) ? '' : ''}>Reject KYC</button>
-      </div>
+      <details class="expand-row pf-section">
+        <summary><span>Review &amp; actions</span><span class="expand-meta">Approve · reject · notes</span></summary>
+        <div class="expand-body stack-sections">
+          <div class="grid-2">
+            <div class="field" style="grid-column:1/-1"><label>Internal admin notes</label><textarea id="kycAdminNotes" rows="3" class="table-input">${escapeAttr(kyc.admin_notes || '')}</textarea></div>
+            <div class="field" style="grid-column:1/-1"><label>Rejection reason (shown to investor if rejected)</label><textarea id="kycRejectionReason" rows="2" class="table-input" placeholder="Explain what needs to be corrected">${escapeAttr(kyc.rejection_reason || '')}</textarea></div>
+          </div>
+          <div class="page-toolbar" style="margin:0">
+            <button type="button" class="btn btn-primary" id="kycApproveBtn" ${kyc.status === 'approved' ? 'disabled' : ''}>Approve KYC</button>
+            <button type="button" class="btn btn-ghost" id="kycReviewBtn" ${kyc.status === 'under_review' ? 'disabled' : ''}>Mark under review</button>
+            <button type="button" class="btn btn-ghost" id="kycRejectBtn" ${!['under_review', 'submitted', 'in_progress'].includes(kyc.status) ? '' : ''}>Reject KYC</button>
+          </div>
+        </div>
+      </details>
     </div>`;
 }
 
@@ -90,6 +117,14 @@ function bindKycAdmin(investorId) {
   const panel = document.getElementById('kycAdminPanel');
   if (!panel || panel.dataset.bound) return;
   panel.dataset.bound = '1';
+
+  panel.addEventListener('click', e => {
+    const btn = e.target.closest('[data-kyc-action]');
+    if (!btn) return;
+    e.preventDefault();
+    if (btn.dataset.kycAction === 'expand-all') kycSetAllSections(true);
+    if (btn.dataset.kycAction === 'collapse-all') kycSetAllSections(false);
+  });
 
   panel.querySelectorAll('.kyc-view-doc').forEach(btn => {
     btn.onclick = () => API.openInvestorKycDocument(investorId, btn.dataset.docId);
