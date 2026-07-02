@@ -850,14 +850,16 @@ function navActionButtons(scope) {
 
 function headerNavRowHtml(item = {}) {
   const style = item.style || '';
+  const visible = item.visible !== false;
   return `<tr>
+    <td class="nav-check"><label><input type="checkbox" class="nav-header-visible"${visible ? ' checked' : ''}> Show</label></td>
     <td><input type="text" class="nav-header-label table-input" value="${escapeAttr(item.label || '')}" placeholder="About"></td>
     <td><input type="text" class="nav-header-href table-input" value="${escapeAttr(item.href || '')}" placeholder="#about or /investor/login"></td>
     <td><select class="nav-header-style table-input">${NAV_LINK_STYLES.map(opt =>
       `<option value="${opt.value}"${style === opt.value ? ' selected' : ''}>${opt.label}</option>`
     ).join('')}</select></td>
     <td><input type="text" class="nav-header-li-class table-input" value="${escapeAttr(item.li_class || '')}" placeholder="nav-cta"></td>
-    <td class="nav-check"><label><input type="checkbox" class="nav-header-calendly"${item.calendly ? ' checked' : ''}> Calendly</label></td>
+    <td class="nav-check"><label><input type="checkbox" class="nav-header-calendly"${item.calendly ? ' checked' : ''} title="Opens your Calendly booking page"> Calendly</label></td>
     <td>${navActionButtons('header')}</td>
   </tr>`;
 }
@@ -866,7 +868,7 @@ function renderHeaderNavRows(items) {
   const rows = items?.length ? items : [];
   return rows.length
     ? rows.map(item => headerNavRowHtml(item)).join('')
-    : '<tr class="nav-empty-row"><td colspan="6" style="color:var(--muted)">No header links yet. Add one below.</td></tr>';
+    : '<tr class="nav-empty-row"><td colspan="7" style="color:var(--muted)">No header links yet. Add one below.</td></tr>';
 }
 
 function footerLinkRowHtml(link = {}) {
@@ -926,6 +928,7 @@ function collectHeaderNavFromForm() {
       const liClass = row.querySelector('.nav-header-li-class').value.trim();
       if (liClass) item.li_class = liClass;
       if (row.querySelector('.nav-header-calendly').checked) item.calendly = true;
+      if (!row.querySelector('.nav-header-visible').checked) item.visible = false;
       return item;
     })
     .filter(item => item.label || item.href);
@@ -1013,7 +1016,7 @@ function bindNavigationEditor() {
       row.remove();
       const tbody = document.querySelector('#headerNavTable tbody');
       if (!tbody.querySelector('tr')) {
-        tbody.innerHTML = '<tr class="nav-empty-row"><td colspan="6" style="color:var(--muted)">No header links yet. Add one below.</td></tr>';
+        tbody.innerHTML = '<tr class="nav-empty-row"><td colspan="7" style="color:var(--muted)">No header links yet. Add one below.</td></tr>';
       }
       return;
     }
@@ -1124,7 +1127,7 @@ async function renderSettings() {
         <div class="field"><label>Badge</label><input id="brandBadge" value="${escapeAttr(s.brand?.badge || '')}"></div>
         <div class="field"><label>Email</label><input id="contactEmail" value="${escapeAttr(s.contact?.email || '')}"></div>
         <div class="field"><label>Phone</label><input id="contactPhone" value="${escapeAttr(s.contact?.phone || '')}"></div>
-        <div class="field"><label>Calendly</label><input id="contactCalendly" value="${escapeAttr(s.contact?.calendly || '')}"></div>
+        <div class="field"><label>Calendly booking URL</label><input id="contactCalendly" value="${escapeAttr(s.contact?.calendly || '')}" placeholder="https://calendly.com/your-name/30min"><small style="display:block;margin-top:6px;color:var(--muted);font-size:12px">Used when a nav link has the Calendly checkbox — opens your online scheduling page in a new tab.</small></div>
         ${settingsSectionFoot('brand', 'brand & contact')}
       </div>
       <div class="card settings-section">
@@ -1153,7 +1156,7 @@ async function renderSettings() {
     </div>
     <div class="card nav-editor-card settings-section" id="navEditor" style="margin-top:18px">
       <h3 style="color:var(--text);font-size:18px;margin-top:0">Navigation (header &amp; footer)</h3>
-      <p style="color:var(--muted);font-size:13px;margin:0 0 16px">Manage the top bar, mobile menu, and footer link columns. Calendly links use the Calendly URL from contact settings above. Footer links with a contact field pull email or phone from contact settings.</p>
+      <p style="color:var(--muted);font-size:13px;margin:0 0 16px">Manage the top bar, mobile menu, and footer link columns. Uncheck <strong>Show</strong> on a header row to hide it from the public site without deleting it. <strong>Calendly</strong> is an online booking tool — when checked, that link opens your Calendly URL from contact settings (e.g. <code style="font-size:12px">https://calendly.com/your-name</code>) instead of the Link field.</p>
 
       <div class="nav-editor-section">
         <div class="nav-editor-section-head">
@@ -1163,7 +1166,7 @@ async function renderSettings() {
         <div class="table-wrap">
           <table id="headerNavTable">
             <thead>
-              <tr><th>Label</th><th>Link</th><th>Style</th><th>CSS class</th><th>Calendly</th><th></th></tr>
+              <tr><th>Show</th><th>Label</th><th>Link</th><th>Style</th><th>CSS class</th><th>Calendly</th><th></th></tr>
             </thead>
             <tbody>${renderHeaderNavRows(s.navigation?.header)}</tbody>
           </table>

@@ -68,17 +68,19 @@ function headerLinkHtml(item) {
 function applyNavigation(nav) {
   if (!nav) return;
 
+  const headerItems = (nav.header || []).filter(item => item.visible !== false);
+
   const headerNav = document.getElementById('headerNav');
-  if (headerNav && nav.header?.length) {
-    headerNav.innerHTML = nav.header.map(item => {
+  if (headerNav && headerItems.length) {
+    headerNav.innerHTML = headerItems.map(item => {
       const liClass = item.li_class ? ` class="${escNav(item.li_class)}"` : '';
       return `<li${liClass}>${headerLinkHtml(item)}</li>`;
     }).join('');
   }
 
   const mobileMenu = document.getElementById('mobileMenu');
-  if (mobileMenu && nav.header?.length) {
-    mobileMenu.innerHTML = nav.header.map(item => {
+  if (mobileMenu && headerItems.length) {
+    mobileMenu.innerHTML = headerItems.map(item => {
       if (item.style === 'gold') {
         return `<a ${navLinkAttrs(item)} class="btn btn-gold">${escNav(item.label)}</a>`;
       }
